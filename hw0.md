@@ -62,13 +62,17 @@ In which our intrepid hero battles standard out, standard error, file descriptor
 
 1.  **Hello, World! (system call style)** Write a program that uses `write()` to print out “Hi! My name is &lt;Your Name&gt;”.
 
+```
+// Your code here
+```
+
 2.  **Hello, Standard Error Stream!** Write a function to print out a triangle of height `n` to standard error. Your function should have the signature `void write_triangle(int n)` and should use `write()`. The triangle should look like this, for n = 3:
 
-    ``` c
-    *
-    **
-    ***
-    ```
+``` c
+*
+**
+***
+```
 
 3.  **Writing to files** Take your program from “Hello, World!” modify it write to a file called `hello_world.txt`. Make sure to to use correct flags and a correct mode for `open()` (`man 2 open` is your friend).
 
