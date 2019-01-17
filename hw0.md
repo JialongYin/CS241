@@ -98,13 +98,13 @@ char *ptr = "hello";
 *ptr = 'J';
 ```
 
-7.  What does `sizeof(HelloWorld)` return?
+7.  What does `sizeof("Hello\0World")` return?
 
 ```c
 // Your answer here
 ```
 
-8.  What does `strlen(HelloWorld)` return?
+8.  What does `strlen("Hello\0World")` return?
 
 ```c
 // Your answer here
