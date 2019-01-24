@@ -93,7 +93,7 @@ int main(){
 6.  What are some differences between `write()` and `printf()`?
 
 ```c
-printf() has buffer; printf can use data type pattern to represent variable.
+write is a system call and printf is a library call; printf() has buffer; printf can use data type pattern to represent variable.
 ```
 
 ### Chapter 2
@@ -116,7 +116,7 @@ Sizing up C types and their limits, `int` and `char` arrays, and incrementing po
 * `int`:4 
 * `double`:8 
 * `float`:4
-* `long`:4
+* `long`:8
 * `long long`:8 
 
 4.  On a machine with 8 byte integers, the declaration for the variable `data` is `int data[8]`. If the address of data is `0x7fbd9d40`, then what is the address of `data+2`?
@@ -142,13 +142,13 @@ char *ptr = "hello";
 7.  What does `sizeof("Hello\0World")` return?
 
 ```c
-12
+6
 ```
 
 8.  What does `strlen("Hello\0World")` return?
 
 ```c
-11
+5
 ```
 
 9.  Give an example of X such that `sizeof(X)` is 3.
@@ -169,7 +169,7 @@ Program arguments, environment variables, and working with character arrays (str
 
 1.  What are two ways to find the length of `argv`?
 First parameter of main() "argc" indicates the length.
-
+int count = 0; while(argv[++count] != NULL);
 2.  What does `argv[0]` represent?
 ./program
 3.  Where are the pointers to environment variables stored (on the stack, the heap, somewhere else)?
@@ -245,22 +245,21 @@ person_t* create(char* name, int age){
   return person;
 }
 // 13
-void destroy(person_t person){
+void destroy(person_t*  person){
   free(person->name);
   memset(person, 0 , sizeof(person_t));
   free(person);
 }
 int main() {
 // 11
-person_t* Agent_Smith = (person_t*) malloc(sizeof(person_t));
-person_t* Sonny_Moore = (person_t*) malloc(sizeof(person_t));
-Agent_Smith->age = 128;
-Sonny_Moore->age = 256;
-Agent_Smith->friends[0] = Sonny_Moore;
-Sonny_Moore->friends[0] = Agent_Smith;
-destroy(Agent_Smith);
-destroy(Sonny_Moore);
- 
+char* name1 = "Agent Smith";
+char* name2 = "Sonny Moore";
+person_t* p1 = create(name1, 128);
+person_t* p2 = create(name2, 256);
+p1->friends[0] = Sonny_Moore;
+p2->friends[0] = Agent_Smith;
+destroy(p1);
+destroy(p2);
 }
 ```
 
@@ -292,7 +291,7 @@ sscanf(data, "%s %d %s", buffer1, num, buffer2);
 ```
 
 4.  What does one need to define before including `getline()`?
-char* buffer = NULL; size_t capacity = 0;
+#define _GNU_SOURCE char* buffer = NULL; size_t capacity = 0;
 5.  Write a C program to print out the content of a file line-by-line using `getline()`.
 
 ```c
@@ -305,7 +304,7 @@ int main(int argc, char *argv[]){
   size_t len = 0;
   ssize_t nread;;
   while ((nread = getline(&line, &len, stream)) != -1) {
-               printf(" %zu \n", nread);
+               printf(" %s \n", line);
     
   }
 }
