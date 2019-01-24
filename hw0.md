@@ -83,7 +83,7 @@ int main(){
 int main(){
   mode_t mode = S_IRUSR | S_IWUSR;
   int fildes = open("hello_world.txt", O_CREAT | O_TRUNC | O_RDWR, mode);
-  printf("Hello, World!");
+  dprintf(3, "Hello World!");
   close(fildes);
   return 0;
 }
@@ -122,7 +122,7 @@ Sizing up C types and their limits, `int` and `char` arrays, and incrementing po
 4.  On a machine with 8 byte integers, the declaration for the variable `data` is `int data[8]`. If the address of data is `0x7fbd9d40`, then what is the address of `data+2`?
 
 ```c
-0x7fbd9d48
+0x7fbd9d50
 ```
 
 5.  What is `data[3]` equivalent to in C? Hint: what does C convert `data[3]` to before dereferencing the address? Remember, the type of a string constant `abc` is an array.
@@ -316,13 +316,13 @@ These are general tips for compiling and developing using a compiler and git. So
 
 
 1.  What compiler flag is used to generate a debug build?
-gcc
+-g
 
 2.  You fix a problem in the Makefile and type `make` again. Explain why this may be insufficient to generate a new build.
-
+make clean first to clear previous .o files and then make again.
 
 3.  Are tabs or spaces used to indent the commands after the rule in a Makefile?
-
+Yes
 
 4.  What does `git commit` do? What’s a `sha` in the context of git?
 A commit, or "revision", is an individual change to a file (or set of files). It's like when you save a file, except with Git, every time you save it creates a unique ID (a.k.a. the "SHA" or "hash") that allows you to keep record of what changes were made when and by who. Commits usually contain a commit message which is a brief description of what changes were made.
@@ -336,9 +336,10 @@ Displays paths that have differences between the index file and the current HEAD
 A gitignore file specifies intentionally untracked files that Git should ignore. Files already tracked by Git are not affected
 7.  What does `git push` do? Why is it not just sufficient to commit with `git commit -m ’fixed all bugs’ `?
 Use git push to push commits made on your local branch to a remote repository. The git push command takes two arguments: A remote name, for example, origin. A branch name, for example, master.
-
+Because if we simply do commit, we commit files to the local.
 8.  What does a non-fast-forward error `git push` reject mean? What is the most common way of dealing with this?
-
+If another person has pushed to the same branch as you, Git won't be able to push your changes.
+You can fix this by fetching and merging the changes made on the remote branch with the changes that you have made locallly.
 
 ### Optional: Just for fun
 
