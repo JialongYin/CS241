@@ -27,47 +27,49 @@
 typedef struct sstring sstring;
 
 /**
- * Construct a sstring from a c string. This function will allocate any memory
- * requried to create a sstring. On the heap.
+ * This function should take in a C-string, and return a pointer to an sstring, 
+ * allocating any memory required to create the sstring on the heap.
  */
 sstring *cstr_to_sstring(const char *input);
 
 /**
- * Return a c-string from an sstring. This function will allocate the memory to
- * store the returned c string on the heap.
+ * This function returns a C-string from an sstring. This function will allocate the memory to
+ * store the returned C-string on the heap.
  */
 char *sstring_to_cstr(sstring *this);
 
 /**
- * This function takes in two sstrings and appends the contents of the second
+ * This function takes in two sstrings, appends the second to the first, and returns the length of the first sstring after the append.
  * to the first.
  * Example:
  *
  * sstring *str1 = cstr_to_sstring("abc");
  * sstring *str2 = sstring_to_cstr("def");
- * sstring_append(str1, str2);
+ * int len = sstring_append(str1, str2); // len == 6
  * sstring_to_cstr(str1); // == "abcdef"
  */
 int sstring_append(sstring *this, sstring *addition);
 
 /**
- * Takes in an sstring and splits the string into a vector of c-strings on a
- * given delimiter. This should be analogous to python3's split function on
+ * Takes in an sstring and a character (the delimiter), and splits the sstring into a vector of C-strings on the given delimiter. 
+ * This should be analogous to python3's split function on
  * strings. You can check what the output should be for a given source string,
  * INPUT and a delimiter D, by running `python3 -c 'print("INPUT".split('D'))'`
  * in a shell.
  *
  * Example:
- *
+ * sstring_split(cstr_to_sstring("abcdeefg"), 'e'); // == [ "abcd", "", "fg" ]);
  * sstring_split(cstr_to_sstring("This is a sentence."), ' ');
  * // == [ "This", "is", "a", "sentence." ]
  */
 vector *sstring_split(sstring *this, char delimiter);
 
 /**
- * Replaces the first instance of `target` after `offset` bytes of data with
- * `substitution`. You can assume that `offset` is always less than the length
- * of the data in `this`.
+ * This function should substitute one occurrence of target in this after offset bytes with 
+ * substitution. If there are no occurrences of target after offset bytes, return -1. 
+ * Otherwise, return 0.
+ * 
+ * You can assume that `offset` is always less than the length of the data in `this`.
  *
  * Example:
  *
@@ -81,10 +83,10 @@ int sstring_substitute(sstring *this, size_t offset, char *target,
                        char *substitution);
 
 /**
- * Return a c-string representing the bytes between the starting and ending
- * indicies. You can assume that start and end are always positive and satisfy
- * the following rule:
- *  0 <= start <= end <= number of bytes held by `this`
+ * This function takes in an sstring, a start index and end index. 
+ * It should return a C-string representing the bytes between start (inclusive) and end (exclusive).
+ * You can assume that start and end are always positive and satisfy the following rule:
+ *     0 <= start <= end <= number of bytes held by `this`
  *
  *
  * Example:
