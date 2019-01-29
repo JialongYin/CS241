@@ -31,11 +31,11 @@ int test_camelCaser(char **(*camelCaser)(const char *),
         output = camelCaser("");
         if ( output[0] != 0 ) return 0;
         destroy(output);
-	
-	output = camelCaser(" ");
+	/*
+	output = camelCaser("   ");
         if ( output[0] != 0 ) return 0;
         destroy(output);
-
+	*/
         //Testcase1: 
         char str1[] = " A2c 3e5 123   iS a WORD? No! disapeear ";
         output = camelCaser(str1);
@@ -48,7 +48,7 @@ int test_camelCaser(char **(*camelCaser)(const char *),
         output = camelCaser(str2);
         if ( output[0] != NULL ) return 0;
         //printf("testcase2 pass\n");
-
+	/*
         //Testcase3:
         char str3[] = " \n &A2c 3e5 123   iS a WORD? No! = @ disapeear\t ";
         output = camelCaser(str3);
@@ -58,7 +58,7 @@ int test_camelCaser(char **(*camelCaser)(const char *),
         if ( strcmp(output[3], "")) return 0;
         if ( strcmp(output[4], "")) return 0;
         destroy(output);
-
+	*/
         //Testcase4:
         char str4[] = "@.!";// "", NULL
         output = camelCaser(str4);
@@ -67,7 +67,7 @@ int test_camelCaser(char **(*camelCaser)(const char *),
         if ( strcmp(output[2], "")) return 0;
         destroy(output);
         //printf("testcase4 pass\n");
-
+	
         //Testcase5:
         char str5[] = " \a   \b \n     \t     ";// "", NULL
         output = camelCaser(str5);
@@ -98,7 +98,7 @@ int test_camelCaser(char **(*camelCaser)(const char *),
         output = camelCaser(str8);
         if ( strcmp(output[0], "")) return 0;
         destroy(output);
-	
+	/*
 	//Testcase9:
 	char str9[] = "The Heisenbug is an incredible creature. Facenovel servers get their power from its indeterminism. Code smell can be ignored with INCREDIBLE use of air freshener. God objects are the new religion.";// "", NULL
         output = camelCaser(str9);
@@ -107,23 +107,25 @@ int test_camelCaser(char **(*camelCaser)(const char *),
         if ( strcmp(output[2], "codeSmellCanBeIgnoredWithIncredibleUseOfAirFreshener")) return 0;
         if ( strcmp(output[3], "godObjectsAreTheNewReligion")) return 0;
         destroy(output);
-
+	*/
 	//Testcase10: 
         char str10[] = "rgd";// NULL
         output = camelCaser(str10);
         if ( output[0] != NULL ) return 0;
-        
+        /*
 	//Testcase11:
         char str11[] = "a@";// "", NULL
         output = camelCaser(str11);
         if ( strcmp(output[0], "a")) return 0;
         destroy(output);
-	
+	*/
+	/*
 	//Testcase12: 
         char str12[] = "r";// NULL
         output = camelCaser(str12);
         if ( output[0] != NULL ) return 0;
-       
+       */
+	/*
 	//Testcase14:
         char str14[] = "   @ .  ! ";// "", NULL
         output = camelCaser(str14);
@@ -131,12 +133,13 @@ int test_camelCaser(char **(*camelCaser)(const char *),
         if ( strcmp(output[1], "")) return 0;
         if ( strcmp(output[2], "")) return 0;
         destroy(output);
- 
+	*/
+ 	/*
 	//Testcase15: 
         char str15[] = "1";
         output = camelCaser(str15);
         if ( output[0] != NULL ) return 0;
-
+	*/
  	//Testcase16: 
 	const char* str16="\a\bas\a\bas, f62 and \a y,";
     	char* str5_0="\a\bas\a\bas";
