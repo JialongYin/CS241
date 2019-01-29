@@ -10,7 +10,7 @@
 int main() {
     // Enter the string you want to test with the reference here
     //char *input = " A2c is a WORD? No! ";
-    char *input = "   .   ";
+    char *input = "123@.12d!";
     // This function prints the reference implementation output on the terminal
     print_camelCaser(input);
 

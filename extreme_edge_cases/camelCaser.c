@@ -78,12 +78,18 @@ char **output_gen(char **input_sl){
 		char *start_os = output_s;
                 int pre_space = 1;
 		int i = 0;
+		int first_word = 1;
+		int second_space = 0;
                 while ( *stc ) {
                         if ( !isspace(*stc) ){
                                 if ( pre_space ) {
 					if ( isalpha(*stc) ) {
 						*stc = toupper(*stc); 
 						pre_space = 0; //1st alpha
+						if ( first_word ) {
+							*stc = tolower(*stc);
+							first_word = 0;
+						}
 					}
 					output_s[i] = *stc;			
 				} 
@@ -92,12 +98,15 @@ char **output_gen(char **input_sl){
 					output_s[i] = *stc;
 				}
 				i++;
+				second_space = 1;
                         }
 			else {
+				if ( second_space ) first_word = 0;
 				pre_space = 1;
 			}
                         stc++;
                 }
+		//printf("before seg : %s \n", start_os);
 		if ( start_os && *start_os ) {
 			//printf("before seg : %s\n", start_os); 
 			while ( !isalpha(*start_os) ) start_os++; 
