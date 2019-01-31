@@ -12,8 +12,8 @@ void print_time_usage() {
 }
 
 void print_env_usage() {
-    fprintf(stderr, "\n\t ./env [-n #] [key=val1,val2,...] "
-                    "[key2=val1,val2,...] ... -- cmd [args] ...\n\n");
+    fprintf(stderr, "\n\t ./env [key=val1] "
+                    "[key2=val2] ... -- cmd [args] ...\n\n");
     exit(2);
 }
 
