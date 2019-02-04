@@ -55,15 +55,7 @@ int main() {
 
 	char str[] = " ,CS241";
 	tok_step(str);
-/*
-void the_end(void *orange, void *blue) {
-    if (orange != NULL && orange == blue && ((char *)blue)[0] == 1 &&
-        *((int *)orange) % 3 == 0) {
-        printf("11: Illinois\n");
-    } else
-        printf("11: ERROR\n");
-}	
-*/
+
 	char blue[10];
 	for (int i = 0; i < 10; i++) blue[i] = 0;
 	blue[0] = 1; blue[1] = 2; blue[2] = 0; blue[3] = 0;
