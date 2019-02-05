@@ -73,15 +73,17 @@ int main(int argc, char *argv[]) {
       // sstring_destroy(replace_me);
 
 
-    sstring *replace_me = cstr_to_sstring("This is a {} day, {}");
-    sstring_substitute(replace_me, 18, "{}", "friend");
-    char *cstr_sbs = sstring_to_cstr(replace_me); // == "This is a {} day, friend!"
-    printf("str : %s\n", cstr_sbs);
-    sstring_substitute(replace_me, 0, "{}", "good");
+    sstring *replace_me = cstr_to_sstring("{ This is a  {  day,     { }");
+    int ret = sstring_substitute(replace_me, 1, "{", "friend");
+    char *cstr_sbs1 = sstring_to_cstr(replace_me); // == "This is a {} day, friend!"
+    printf("ret1 : %d\n", ret);
+    printf("str1 : %s\n", cstr_sbs1);
+    ret = sstring_substitute(replace_me, 0, "{", "good");
     char *cstr_sbs2 = sstring_to_cstr(replace_me); // == "This is a good day, friend!"
+    printf("ret2 : %d\n", ret);
     printf("str2 : %s\n", cstr_sbs2);
     sstring_destroy(replace_me);
-    free(cstr_sbs);
+    free(cstr_sbs1);
     free(cstr_sbs2);
 
     return 0;

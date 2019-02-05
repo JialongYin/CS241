@@ -102,6 +102,7 @@ int sstring_substitute(sstring *this, size_t offset, char *target,
           }
           return 0;
         }
+        flag_sbs = 1;
       }
     }
     return -1;
