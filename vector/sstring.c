@@ -72,7 +72,6 @@ vector *sstring_split(sstring *this, char delimiter) {
 
 int sstring_substitute(sstring *this, size_t offset, char *target,
                        char *substitution) {
-    // your code goes here
     char *ptr_tgt = target;
     int flag_sbs = 1;
     for (size_t i = offset; i < vector_size(this->v); i++) {
@@ -93,8 +92,13 @@ int sstring_substitute(sstring *this, size_t offset, char *target,
             vector_erase(this->v, i);
           }
           for (size_t n = 0; n < strlen(substitution); n++) {
-            vector_insert(this->v, i, substitution+n);
-            i++;
+            if (i == vector_size(this->v)) {
+              vector_push_back(this->v, substitution+n);
+              i++;
+            } else{
+              vector_insert(this->v, i, substitution+n);
+              i++;
+            }
           }
           return 0;
         }

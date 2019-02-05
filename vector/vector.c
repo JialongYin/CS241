@@ -135,7 +135,6 @@ size_t vector_size(vector *this) {
     // your code here
     return this->size;
 }
-
 void vector_resize(vector *this, size_t n) {
     assert(this);
     // your code here
@@ -145,7 +144,6 @@ void vector_resize(vector *this, size_t n) {
       }
       this->array = realloc(this->array, n * sizeof(void *));
       this->size = n;
-      this->capacity = n;
     } else {
         vector_reserve(this, n);
         for (size_t i = vector_size(this); i < n; i++) {
@@ -154,6 +152,7 @@ void vector_resize(vector *this, size_t n) {
         this->size = n;
     }
 }
+
 
 size_t vector_capacity(vector *this) {
     assert(this);
