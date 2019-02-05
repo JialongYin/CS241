@@ -142,7 +142,7 @@ void vector_resize(vector *this, size_t n) {
       for (size_t i = n; i < vector_size(this); i++) {
         (this->destructor)(this->array[i]);
       }
-      this->array = realloc(this->array, n * sizeof(void *));
+      this->array = realloc(this->array, vector_capacity(this) * sizeof(void *));
       this->size = n;
     } else {
         vector_reserve(this, n);

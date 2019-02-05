@@ -18,21 +18,34 @@ int main(int argc, char *argv[]) {
     }
     ptr = str;
 
+
+    //
+    printf("capacity : %zu\n", vector_capacity(v));
+    vector_reserve(v, 5);
+    printf("capacity : %zu\n", vector_capacity(v));
+
+    printf("capacity : %zu\n", vector_capacity(v));
+    printf("size : %zu\n", vector_size(v));
     for (size_t i = 0; i < vector_size(v); i++) {
       char *c = (char *) vector_get(v, i);
       printf("%zu:%c;", i, *c);
     }
     printf("\n");
 
-    printf("capacity : %zu\n", vector_capacity(v));
-    vector_reserve(v, 5);
-    printf("capacity : %zu\n", vector_capacity(v));
     vector_reserve(v, 20);
+    printf("vector_reserve(v, 20);\n");
     printf("capacity : %zu\n", vector_capacity(v));
-
     printf("size : %zu\n", vector_size(v));
-    vector_resize(v, 11);
+    for (size_t i = 0; i < vector_size(v); i++) {
+      char *c = (char *) vector_get(v, i);
+      printf("%zu:%c;", i, *c);
+    }
+    printf("\n");
 
+    vector_resize(v, 11);
+    printf("vector_resize(v, 11);\n");
+    printf("capacity : %zu\n", vector_capacity(v));
+    printf("size : %zu\n", vector_size(v));
     for (size_t i = 0; i < vector_size(v); i++) {
       char *c = (char *) vector_get(v, i);
       printf("%zu:%c;", i, *c);
@@ -40,9 +53,15 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     vector_resize(v, 20);
-    printf("capacity : %zu\n", vector_capacity(v));
-    printf("size : %zu\n", vector_size(v));
-
+    printf("vector_resize(v, 20);\n");
+    printf("capacity 4: %zu\n", vector_capacity(v));
+    printf("size 4: %zu\n", vector_size(v));
+    for (size_t i = 0; i < vector_size(v); i++) {
+      char *c = (char *) vector_get(v, i);
+      printf("%zu:%c;", i, *c);
+    }
+    printf("\n");
+    //
     for (size_t i = 0; i < vector_size(v); i++) {
       char *c = (char *) vector_get(v, i);
       printf("%zu:%c;", i, *c);
