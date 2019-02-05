@@ -140,6 +140,9 @@ void vector_resize(vector *this, size_t n) {
     assert(this);
     // your code here
     if (n <= vector_size(this)) {
+      for (size_t i = n; i < vector_size(this); i++) {
+        (this->destructor)(this->array[i]);
+      }
       this->array = realloc(this->array, n * sizeof(void *));
       this->size = n;
       this->capacity = n;
@@ -168,8 +171,9 @@ void vector_reserve(vector *this, size_t n) {
     assert(this);
     // your code here
     if (n > vector_capacity(this)) {
-      this->array = realloc(this->array, n * sizeof(void *));
-      this->capacity = n;
+      size_t new_capacity = get_new_capacity(n);
+      this->array = realloc(this->array, new_capacity * sizeof(void *));
+      this->capacity = new_capacity;
     }
 }
 
@@ -213,8 +217,7 @@ void vector_push_back(vector *this, void *element) {
     assert(this);
     // your code here
     if (vector_size(this)+1 > vector_capacity(this)) {
-      size_t new_capacity = get_new_capacity(vector_size(this)+1);
-      vector_reserve(this, new_capacity);
+      vector_reserve(this, vector_size(this)+1);
     }
     this->array[vector_size(this)] = (this->copy_constructor)(element);
     (this->size)++;
@@ -232,10 +235,9 @@ void vector_insert(vector *this, size_t position, void *element) {
     assert(this->size > position);
     // your code here
     if (vector_size(this)+1 > vector_capacity(this)) {
-      size_t new_capacity = get_new_capacity(vector_size(this)+1);
-      vector_reserve(this, new_capacity);
+      vector_reserve(this, vector_size(this)+1);
     }
-    this->array[vector_size(this)] = *vector_back(this);
+    this->array[vector_size(this)] = (this->copy_constructor)(*vector_back(this));
     for (size_t i = vector_size(this)-1; i > position; i--) {
       vector_set(this, i, vector_get(this, i-1));
     }
@@ -247,12 +249,10 @@ void vector_erase(vector *this, size_t position) {
     assert(this);
     assert(position < vector_size(this));
     // your code here
-    void *temp = vector_get(this, position);
     for (size_t i = position; i < vector_size(this)-1; i++) {
       vector_set(this, i, vector_get(this, i+1));
     }
-    (this->destructor)(temp);
-    *vector_back(this) = NULL;
+    (this->destructor)(*vector_back(this));
     (this->size)--;
 }
 

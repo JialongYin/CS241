@@ -21,7 +21,7 @@ struct sstring {
 sstring *cstr_to_sstring(const char *input) {
     // your code goes here
     sstring *str_p = calloc(1, sizeof(sstring));
-    str_p->v = vector_create(char_copy_constructor, char_destructor, char_default_constructor);
+    str_p->v = char_vector_create();
     const char *ptr = input;
     while (*ptr) {
       vector_push_back(str_p->v, (void *) ptr);
@@ -49,19 +49,24 @@ int sstring_append(sstring *this, sstring *addition) {
 
 vector *sstring_split(sstring *this, char delimiter) {
     // your code goes here
-    vector *str_l = vector_create(string_copy_constructor, string_destructor, string_default_constructor);
+    vector *str_l = string_vector_create();
     sstring *str_p = calloc(1, sizeof(sstring));
-    str_p->v = vector_create(char_copy_constructor, char_destructor, char_default_constructor);
+    str_p->v = char_vector_create();
     for (size_t i = 0; i < vector_size(this->v); i++) {
       char *curr = vector_get(this->v, i);
       if (*curr == delimiter) {
         char *cstr = sstring_to_cstr(str_p);
         vector_push_back(str_l, cstr);
         vector_clear(str_p->v);
+        free(cstr);
       } else {
         vector_push_back(str_p->v, curr);
       }
     }
+    char *cstr_end = sstring_to_cstr(str_p);
+    vector_push_back(str_l, cstr_end);
+    free(cstr_end);
+    sstring_destroy(str_p);
     return str_l;
 }
 
@@ -70,7 +75,7 @@ int sstring_substitute(sstring *this, size_t offset, char *target,
     // your code goes here
     char *ptr_tgt = target;
     int flag_sbs = 1;
-    for (size_t i = offset+1; i < vector_size(this->v); i++) {
+    for (size_t i = offset; i < vector_size(this->v); i++) {
       char *curr = vector_get(this->v, i);
       if (*curr == *ptr_tgt && (vector_size(this->v)-i) >= strlen(target)) {
         int j = i;
@@ -91,22 +96,22 @@ int sstring_substitute(sstring *this, size_t offset, char *target,
             vector_insert(this->v, i, substitution+n);
             i++;
           }
-          i--;
+          return 0;
         }
       }
-
     }
     return -1;
 }
 
 char *sstring_slice(sstring *this, int start, int end) {
     // your code goes here
-    char *cstr = calloc((start-end)+1, sizeof(char));
+    char *cstr = calloc((end-start)+1, sizeof(char));
     int j = 0;
     for (int i = start; i < end; i++) {
       cstr[j] = *((char *) vector_get(this->v, i));
       j++;
     }
+    cstr[j] = '\0';
     return cstr;
 }
 
