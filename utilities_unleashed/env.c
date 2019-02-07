@@ -1,6 +1,7 @@
 /**
  * Utilities Unleashed Lab
  * CS 241 - Spring 2019
+ Partner: yichiz3, jialong2
  */
  #include <stdio.h>
  #include <stdint.h>
@@ -13,7 +14,7 @@
  #include "format.h"
 
 int main(int argc, char *argv[]) {
-  if (argc < 2) {
+  if (argc < 4) {
     print_env_usage();
   }
 
@@ -50,24 +51,20 @@ int main(int argc, char *argv[]) {
                         ptr_v++;
                     }
                 } else {
-                    // printf("ref.: %s\n", value+1);
                     value = getenv(value+1);
-                    // printf("ref. value: %s\n", value);
                     if (!value) {
                         print_environment_change_failed();
                     }
                 }
-                int flag = setenv(key, value, 1);
-                if (flag < 0)
+                if (setenv(key, value, 1) < 0)
                     print_environment_change_failed();
           } else {
-                    // printf("argv[i+1]: %s\n", argv[i+1]);
                     execvp(argv[i+1], argv+i+1);
                     print_exec_failed();
           }
           i++;
         }
-        // print_env_usage();
+        print_env_usage();
   }
   return 0;
 }
