@@ -1,4 +1,5 @@
 ls
 cd ..
-sleep 2
+sleep 4 &
 echo Finished!
+echo hello

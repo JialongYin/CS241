@@ -2,7 +2,7 @@
  * Shell Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include "vector.h"
 #pragma once
 /**

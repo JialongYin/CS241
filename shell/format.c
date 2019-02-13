@@ -2,7 +2,7 @@
  * Shell Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include "format.h"
 #include <limits.h>
 #include <stdio.h>
