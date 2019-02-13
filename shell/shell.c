@@ -44,6 +44,7 @@ void ctrlcpressed() {
     process *prcss = (process *) vector_get(process_l, i);
     if ( prcss->pid != getpgid(prcss->pid) ){
       kill(prcss->pid, SIGKILL);
+      // printf("finished foreground process: %d\n", prcss->pid);
       process_destroy(prcss->pid);
     }
   }
@@ -52,7 +53,7 @@ void backgrndEnd() {
   pid_t pid;
   while ( (pid = waitpid(-1, 0, WNOHANG)) > 0) {
     process_destroy(pid);
-    // printf("finished child process: %d\n", pid);
+    // printf("finished background process: %d\n", pid);
   }
 }
 int external_command(char *buffer) {
@@ -130,6 +131,7 @@ void killAll(){
   for (size_t i = 0; i < vector_size(process_l); i++) {
       process *prcss = (process *) vector_get(process_l, i);
       kill(prcss->pid, SIGKILL);
+      // printf("killed process: %d\n", prcss->pid);
   }
   process_l_destroy();
 }
@@ -158,13 +160,17 @@ int shell(int argc, char *argv[]) {
     }
     // load history
     FILE *file_h;
+    char *history_path;
     if (hit_name) {
         file_h = fopen(hit_name, "r");
         // if (!file_h) {
         //     print_history_file_error();
         //     exit(1);
         // }
-        if (file_h){
+        if (!file_h) {
+            history_path = NULL;
+        } else {
+            history_path = get_full_path(hit_name);
             char *buffer_h = NULL;
             size_t size_h = 0;
             ssize_t bytes_read_h;
@@ -241,8 +247,11 @@ int shell(int argc, char *argv[]) {
           int op_flag = 0;
           sstring *sstr = cstr_to_sstring(buffer);
           vector *parse = sstring_split(sstr, ' ');
+          // printf("vector_size(parse) : %zu\n", vector_size(parse));
           for (size_t i = 0; i < vector_size(parse); i++) {
               char *op = (char *) vector_get(parse, i);
+              // printf("op : %s\n", op);
+              // printf("op[strlen(op)-1] : %c\n", op[strlen(op)-1]);
               if (!strcmp(op, "&&")) {
                   char *buffer1 = strtok(buffer, "&");
                   buffer1[strlen(buffer1)-1] = '\0';
@@ -292,11 +301,20 @@ int shell(int argc, char *argv[]) {
     }
     // write to history
     if (hit_name) {
-      FILE* f = fopen(get_full_path(hit_name), "w");
-      VECTOR_FOR_EACH(history, line, {
-        fprintf(f, "%s\n", (char *)line);
-      });
-      fclose(f);
+      if (!history_path) {
+          FILE* f = fopen(hit_name, "w");
+          VECTOR_FOR_EACH(history, line, {
+            fprintf(f, "%s\n", (char *)line);
+          });
+          fclose(f);
+      } else {
+          FILE* f = fopen(history_path, "w");
+          VECTOR_FOR_EACH(history, line, {
+            fprintf(f, "%s\n", (char *)line);
+          });
+          fclose(f);
+          free(history_path);
+      }
     }
     vector_destroy(history);
     return 0;
