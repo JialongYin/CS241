@@ -70,7 +70,7 @@ void *mini_realloc(void *ptr, size_t request_size, const char *filename,
       return NULL;
     }
 
-    meta_data* new_p = realloc(meta_p, request_size + sizeof(meta_data));
+    meta_data* new_p = (meta_data*) realloc(meta_p, request_size + sizeof(meta_data));
     if (!new_p) return NULL;
 
     size_t old_request_size = meta_p->request_size;
