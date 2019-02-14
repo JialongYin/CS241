@@ -1,156 +1,124 @@
 /**
  * Mini Valgrind Lab
  * CS 241 - Spring 2019
+ partner: jialong2, qishanz2
  */
 
- #include "mini_valgrind.h"
-  #include <stdio.h>
-  #include <string.h>
+#include "mini_valgrind.h"
+#include <stdio.h>
+#include <string.h>
 
-    size_t total_memory_requested = 0;
-    size_t total_memory_freed=0;
-    size_t invalid_addresses = 0;
-    meta_data* head =NULL;
+meta_data* head;
+size_t total_memory_requested = 0;
+size_t total_memory_freed = 0;
+size_t invalid_addresses = 0;
+void *mini_malloc(size_t request_size, const char *filename,
+                  void *instruction) {
+    // your code here
+    if (request_size == 0) return NULL;
+    void* ptr = malloc(sizeof(meta_data) + request_size);
+    if (!ptr) return NULL;
 
+    meta_data* new_meta = (meta_data*)ptr;
+    new_meta->request_size = request_size;
+    new_meta->filename = filename;
+    new_meta->instruction = instruction;
+    new_meta->next = head;
 
-  void *mini_malloc(size_t request_size, const char *filename,
-                    void *instruction) {
-      if(request_size==0){
-        return NULL;
+    head = new_meta;
+    total_memory_requested += request_size;
+    return ptr + sizeof(meta_data);
+}
+
+void *mini_calloc(size_t num_elements, size_t element_size,
+                  const char *filename, void *instruction) {
+    // your code here
+    if (num_elements == 0 || element_size == 0) {
+      return NULL;
+    }
+
+    size_t request_size = num_elements * element_size;
+    void* ptr = mini_malloc(request_size, filename, instruction);
+    if (!ptr) return NULL;
+
+    memset(ptr, 0, request_size);
+    return ptr;
+}
+
+void *mini_realloc(void *ptr, size_t request_size, const char *filename,
+                   void *instruction) {
+    // your code here
+    if (!ptr) return mini_malloc(request_size, filename, instruction);
+    if (request_size == 0) {
+      mini_free(ptr);
+      return NULL;
+    }
+
+    meta_data* prev_p = NULL;
+    meta_data* meta_p = head;
+    while (meta_p) {
+      void* memory_ptr = (void*)meta_p + sizeof(meta_data);
+      if (memory_ptr == ptr) {
+        break;
       }
-      meta_data * m1 = malloc(request_size+ sizeof(meta_data));
-      m1->request_size = request_size;
-      m1->filename = filename;
-      m1->instruction = instruction;
+      prev_p = meta_p;
+      meta_p = meta_p->next;
+    }
 
-      m1->next=head;
-      head=m1;
-      total_memory_requested = total_memory_requested + request_size;
-      // your code here
+    if (!meta_p) {
+      invalid_addresses++;
+      return NULL;
+    }
 
-      return head+1;
-  }
+    meta_data* new_p = realloc(meta_p, request_size + sizeof(meta_data));
+    if (!new_p) return NULL;
 
-  void *mini_calloc(size_t num_elements, size_t element_size,
-                    const char *filename, void *instruction) {
-      // your code here
-      if(num_elements==0||element_size==0) return NULL;
-      // calloc(a, b) === calloc(a*b, 1) === {malloc (a*b), memset()}
-      meta_data * m1 = calloc((num_elements*element_size+sizeof(meta_data)),1);
-      m1->request_size = num_elements*element_size;
-      m1->filename = filename;
-      m1->instruction = instruction;
+    size_t old_request_size = meta_p->request_size;
 
-      m1->next=head;
-      head=m1;
-      total_memory_requested = total_memory_requested + num_elements*element_size;
+    new_p->request_size = request_size;
+    new_p->filename = filename;
+    new_p->instruction = instruction;
 
-      return head+1;
-  }
+    if (new_p != meta_p) {
+      prev_p->next = new_p;
+      new_p->next = meta_p->next;
+      free(meta_p);
+    }
 
-  void *mini_realloc(void *payload, size_t request_size, const char *filename,
-                     void *instruction) {
-      // your code here
-      if(payload==NULL) return mini_malloc(request_size,filename,instruction);
-      if(request_size==0) {
-        mini_free(payload);
-        return NULL;
+    if (old_request_size < request_size) {
+      total_memory_requested += request_size - old_request_size;
+    } else if (old_request_size > request_size) {
+      total_memory_freed += old_request_size - request_size;
+    }
+    return new_p + 1;
+}
+
+void mini_free(void *ptr) {
+    // your code here
+    if (!ptr) return;
+
+    meta_data* meta_p = head;
+    meta_data* prev_p = NULL;
+    while(meta_p) {
+      void* memory_ptr = (void*)meta_p + sizeof(meta_data);
+      if (memory_ptr == ptr) {
+        break;
       }
+      prev_p = meta_p;
+      meta_p = meta_p->next;
+    }
 
+    if (!meta_p) {
+      invalid_addresses++;
+      return;
+    }
 
-      meta_data* ptr = ((meta_data*)payload)-1;
-      int origin = (int)ptr->request_size;
-      //mini_free(ptr)
-      //ptr = malloc()
-      //find prev
-      //int flagvalid = 0;
-      meta_data * cur = head;
-      meta_data * curprev = NULL;
-      while (cur!=NULL) {
-       // printf("Billy" );
-       if(ptr==head){
-         head = head->next;
-       //  free(ptr);
-         break;
-       }
-       else if(cur==ptr) {
-         curprev->next = cur->next;
-       //  free(ptr);
+    if (prev_p) {
+      prev_p->next = meta_p->next;
+    } else {
+      head = meta_p->next;
+    }
+    total_memory_freed += meta_p->request_size;
 
-          break;
-          }
-       curprev = cur;
-        cur = cur->next;
-      }
-      if(cur==NULL){
-        invalid_addresses++;
-       // printf("dog" );
-        return NULL;
-      }
-
-     //  else if(flagvalid){
-      // meta_data * prev = head;
-      //(-1)
-      // while(prev->next!=ptr){
-      //   prev++;
-      // }
-      //
-      // prev++;
-      //
-      // prev->next=ptr->next;
-        int n = (int)request_size- origin;
-       ptr = realloc(ptr, request_size+sizeof(meta_data));
-      //
-       //int n = (int)request_size- (int)ptr->request_size;
-      //
-       ptr->request_size = request_size;
-       ptr -> filename = filename;
-       ptr -> instruction = instruction;
-       ptr -> next = head;
-       head = ptr;
-       if(n>0)
-       total_memory_requested = total_memory_requested+ n;
-       else
-       total_memory_freed = total_memory_freed-n;
-       return ptr+1;
-
-   // }
-  }
-
-  void mini_free(void *payload) {
-      // your code here
-      if(payload==NULL) return;
-      int flagvalid = 0;
-      meta_data * mp = (meta_data*)payload-1;
-      meta_data* cur = head;
-      while (cur!=NULL) {
-        //printf("Billy" );
-        if(cur==mp) {
-          flagvalid = 1;
-          }
-        cur = cur->next;
-      }
-      //printf("laoalll" );
-      if(flagvalid ==0){
-        invalid_addresses++;
-        //printf("dog" );
-      }
-      else if(flagvalid){
-        //printf("cat");
-        total_memory_freed = total_memory_freed+(mp->request_size);
-        // printf("%d\n", mp->request_size);
-         //printf("%d\n", total_memory_freed);
-        meta_data* prev = head;
-        while (prev->next!=mp&&prev!=mp) {
-          prev = prev->next;
-        }
-        prev->next = mp->next;
-        mp->next=NULL;
-        if(head==mp) head = mp->next;
-
-          free(mp);
-          mp=NULL;
-
-
-      }
-  }
+    free(meta_p);
+}
