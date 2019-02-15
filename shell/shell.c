@@ -90,7 +90,9 @@ int external_command(char *buffer) {
                 if (result_pid != -1) {
                     // printf("Already wait : %d\n", result_pid);
                     process_destroy(result_pid);
-                    if (!WIFEXITED(status)) return 1; // child not exit successfully
+                    if (WIFEXITED(status) && WEXITSTATUS(status)) {
+                        return 1;
+                    } // child not exit successfully
                 } else {
                   print_wait_failed();
                   exit(1);
@@ -162,15 +164,12 @@ int shell(int argc, char *argv[]) {
     FILE *file_h;
     char *history_path;
     if (hit_name) {
-        file_h = fopen(hit_name, "r");
-        // if (!file_h) {
-        //     print_history_file_error();
-        //     exit(1);
-        // }
+        history_path = get_full_path(hit_name);
+        file_h = fopen(history_path, "r");
         if (!file_h) {
-            history_path = NULL;
+            print_history_file_error();
+            // history_path = get_full_path("./");
         } else {
-            history_path = get_full_path(hit_name);
             char *buffer_h = NULL;
             size_t size_h = 0;
             ssize_t bytes_read_h;
@@ -301,20 +300,20 @@ int shell(int argc, char *argv[]) {
     }
     // write to history
     if (hit_name) {
-      if (!history_path) {
-          FILE* f = fopen(hit_name, "w");
-          VECTOR_FOR_EACH(history, line, {
-            fprintf(f, "%s\n", (char *)line);
-          });
-          fclose(f);
-      } else {
+      // if (!history_path) {
+      //     FILE* f = fopen(hit_name, "w");
+      //     VECTOR_FOR_EACH(history, line, {
+      //       fprintf(f, "%s\n", (char *)line);
+      //     });
+      //     fclose(f);
+      // } else {
           FILE* f = fopen(history_path, "w");
           VECTOR_FOR_EACH(history, line, {
             fprintf(f, "%s\n", (char *)line);
           });
           fclose(f);
           free(history_path);
-      }
+      // }
     }
     vector_destroy(history);
     return 0;
