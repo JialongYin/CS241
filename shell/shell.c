@@ -211,7 +211,6 @@ int shell(int argc, char *argv[]) {
         buffer[bytes_read-1] = '\0';
         if (file != stdin) print_command(buffer);
       }
-      // int command();
       // built-in command
       if (!strcmp(buffer,"!history")) {
           for (size_t i = 0; i < vector_size(history); i++) {
@@ -242,6 +241,7 @@ int shell(int argc, char *argv[]) {
       } else if (!strcmp(buffer,"exit")) {
           killAll(); break;
       } else {
+          vector_push_back(history, buffer);
           // logical operators
           int op_flag = 0;
           sstring *sstr = cstr_to_sstring(buffer);
@@ -256,9 +256,7 @@ int shell(int argc, char *argv[]) {
                   buffer1[strlen(buffer1)-1] = '\0';
                   char *buffer2 = strtok(NULL, "");
                   buffer2 = buffer2+2;
-                  vector_push_back(history, buffer1);
                   if(!external_command(buffer1)) {
-                    vector_push_back(history, buffer2);
                     external_command(buffer2);
                   }
                   op_flag = 1;
@@ -267,9 +265,7 @@ int shell(int argc, char *argv[]) {
                   buffer1[strlen(buffer1)-1] = '\0';
                   char *buffer2 = strtok(NULL, "");
                   buffer2 = buffer2+2;
-                  vector_push_back(history, buffer1);
                   if(external_command(buffer1)) {
-                    vector_push_back(history, buffer2);
                     external_command(buffer2);
                   }
                   op_flag = 1;
@@ -277,9 +273,7 @@ int shell(int argc, char *argv[]) {
                   char *buffer1 = strtok(buffer, ";");
                   char *buffer2 = strtok(NULL, "");
                   buffer2 = buffer2+1;
-                  vector_push_back(history, buffer1);
                   external_command(buffer1);
-                  vector_push_back(history, buffer2);
                   external_command(buffer2);
                   op_flag = 1;
               }
@@ -288,7 +282,6 @@ int shell(int argc, char *argv[]) {
           sstring_destroy(sstr);
           if (!op_flag) {
             // built-in cd && external command
-            vector_push_back(history, buffer);
             external_command(buffer);
           }
 
@@ -300,20 +293,12 @@ int shell(int argc, char *argv[]) {
     }
     // write to history
     if (hit_name) {
-      // if (!history_path) {
-      //     FILE* f = fopen(hit_name, "w");
-      //     VECTOR_FOR_EACH(history, line, {
-      //       fprintf(f, "%s\n", (char *)line);
-      //     });
-      //     fclose(f);
-      // } else {
-          FILE* f = fopen(history_path, "w");
-          VECTOR_FOR_EACH(history, line, {
-            fprintf(f, "%s\n", (char *)line);
-          });
-          fclose(f);
-          free(history_path);
-      // }
+        FILE* f = fopen(history_path, "w");
+        VECTOR_FOR_EACH(history, line, {
+          fprintf(f, "%s\n", (char *)line);
+        });
+        fclose(f);
+        free(history_path);
     }
     vector_destroy(history);
     return 0;
