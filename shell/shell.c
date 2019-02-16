@@ -137,7 +137,18 @@ void killAll(){
   }
   process_l_destroy();
 }
-
+void kill_process(pid_t pid){
+  for (size_t i = 0; i < vector_size(process_l); i++) {
+    process *prcss = (process *) vector_get(process_l, i);
+    if ( prcss->pid == pid ){
+      kill(prcss->pid, SIGKILL);
+      print_killed_process(prcss->pid, prcss->command);
+      process_destroy(prcss->pid);
+      return;
+    }
+  }
+  print_no_process_found(pid);
+}
 
 int shell(int argc, char *argv[]) {
     // TODO: This is the entry point for your shell.
@@ -211,8 +222,19 @@ int shell(int argc, char *argv[]) {
         buffer[bytes_read-1] = '\0';
         if (file != stdin) print_command(buffer);
       }
+      // week 2 built-in command
+      if (!strncmp(buffer,"kill", 4)) {
+        pid_t kill_pid; size_t kill_num_read;
+        kill_num_read = sscanf(buffer+4, "%d", &kill_pid);
+        // printf("kill_num_read : %zu\n", kill_num_read);
+        if ( kill_num_read != 1) {
+          print_invalid_command(buffer);
+        } else {
+          kill_process(kill_pid);
+        }
+      }
       // built-in command
-      if (!strcmp(buffer,"!history")) {
+      else if (!strcmp(buffer,"!history")) {
           for (size_t i = 0; i < vector_size(history); i++) {
             print_history_line(i, (char *) vector_get(history, i));
           }
