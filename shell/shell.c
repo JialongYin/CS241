@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 typedef struct process {
     char *command;
@@ -149,6 +150,118 @@ void kill_process(pid_t pid){
   }
   print_no_process_found(pid);
 }
+void stop_process(pid_t pid){
+  for (size_t i = 0; i < vector_size(process_l); i++) {
+    process *prcss = (process *) vector_get(process_l, i);
+    if ( prcss->pid == pid ){
+      kill(prcss->pid, SIGTSTP);
+      print_stopped_process(prcss->pid, prcss->command);
+      return;
+    }
+  }
+  print_no_process_found(pid);
+}
+void cont_process(pid_t pid){
+  for (size_t i = 0; i < vector_size(process_l); i++) {
+    process *prcss = (process *) vector_get(process_l, i);
+    if ( prcss->pid == pid ){
+      kill(prcss->pid, SIGCONT);
+      return;
+    }
+  }
+  print_no_process_found(pid);
+}
+process_info* process_info_create(char *command, pid_t pid){
+  process_info *prcs_info = calloc(1, sizeof(process_info));
+  // command && pid
+  prcs_info->command = calloc(strlen(command)+1, sizeof(char));
+  strcpy(prcs_info->command, command);
+  prcs_info->pid = pid;
+  // state, thread, vmsize
+  char path[40], line[1000], *p;
+  snprintf(path, 40, "/proc/%d/status", pid);
+  FILE *statusf = fopen(path,"r");
+  if (!statusf) {
+      print_script_file_error();
+      exit(1);
+  }
+  while(fgets(line, 100, statusf)) {
+      if(!strncmp(line, "State:", 6)) {
+        p = line + 7;
+        while(isspace(*p)) ++p;
+        prcs_info->state = *p;
+      } else if (!strncmp(line, "Threads:", 8)) {
+        char *ptr_thread;
+        p = line + 9;
+        while(isspace(*p)) ++p;
+        prcs_info->nthreads = strtol(p, &ptr_thread, 10);
+      } else if (!strncmp(line, "VmSize:", 7)) {
+        char *ptr_vms;
+        p = line + 8;
+        while(isspace(*p)) ++p;
+        prcs_info->vsize = strtol(p, &ptr_vms, 10);
+      }
+  }
+  //starttime, cputime
+  snprintf(path, 40, "/proc/%d/stat", pid);
+  FILE *statf = fopen(path,"r");
+  if (!statf) {
+      print_script_file_error();
+      exit(1);
+  }
+  fgets(line, 1000, statf);
+  p = strtok(line, " ");
+  int i = 0;
+  char *ptr_cpu;
+  unsigned long utime, stime;
+  unsigned long long starttime;
+  while(p != NULL)
+	{
+    if (i == 13) {
+      utime = strtol(p, &ptr_cpu, 10);
+    } else if (i == 14) {
+      stime = strtol(p, &ptr_cpu, 10);
+    } else if (i == 21) {
+      starttime = strtol(p, &ptr_cpu, 10);
+    }
+    p = strtok(NULL, " ");
+		i++;
+	}
+  // cputime
+  char buffer_cpu[100];
+  unsigned long total_seconds_cpu = (utime+stime)/sysconf(_SC_CLK_TCK);
+  if (!execution_time_to_string(buffer_cpu, 100, total_seconds_cpu/60, total_seconds_cpu%60)) exit(1);
+  strcpy(prcs_info->time_str, buffer_cpu);
+  // starttime
+  // FILE *statfsys = fopen("/proc/stat","r");
+  // if (!statfsys) {
+  //     print_script_file_error();
+  //     exit(1);
+  // }
+  // while(fgets(line, 100, statusf)) {
+  //     if(!strncmp(line, "State:", 6)) {
+  //       p = line + 7;
+  //       while(isspace(*p)) ++p;
+  //       prcs_info->state = *p;
+  //     }
+  // }
+  // p = strtok(line, " ");
+  // unsigned long btime;
+  // char buffer_start[100];
+  // unsigned long total_seconds_start = starttime/sysconf(_SC_CLK_TCK) + btime;
+  // if (!time_struct_to_string(buffer_start, 100, struct tm *tm_info)) exit(1);
+  // strcpy(prcs_info->start_str, buffer_start);
+
+  return prcs_info;
+}
+void process_info_ps(){
+  print_process_info_header();
+  for (size_t i = 0; i < vector_size(process_l); i++) {
+    process *prcss = (process *) vector_get(process_l, i);
+    process_info *prcs_info = process_info_create(prcss->command, prcss->pid);
+    print_process_info(prcs_info);
+  }
+}
 
 int shell(int argc, char *argv[]) {
     // TODO: This is the entry point for your shell.
@@ -223,14 +336,31 @@ int shell(int argc, char *argv[]) {
         if (file != stdin) print_command(buffer);
       }
       // week 2 built-in command
-      if (!strncmp(buffer,"kill", 4)) {
+      if (!strcmp(buffer,"ps")) {
+        // process_info_ps();
+      } else if (!strncmp(buffer,"kill", 4)) {
         pid_t kill_pid; size_t kill_num_read;
         kill_num_read = sscanf(buffer+4, "%d", &kill_pid);
-        // printf("kill_num_read : %zu\n", kill_num_read);
         if ( kill_num_read != 1) {
           print_invalid_command(buffer);
         } else {
           kill_process(kill_pid);
+        }
+      } else if (!strncmp(buffer,"stop", 4)) {
+        pid_t stop_pid; size_t stop_num_read;
+        stop_num_read = sscanf(buffer+4, "%d", &stop_pid);
+        if ( stop_num_read != 1) {
+          print_invalid_command(buffer);
+        } else {
+          stop_process(stop_pid);
+        }
+      } else if (!strncmp(buffer,"cont", 4)) {
+        pid_t cont_pid; size_t cont_num_read;
+        cont_num_read = sscanf(buffer+4, "%d", &cont_pid);
+        if ( cont_num_read != 1) {
+          print_invalid_command(buffer);
+        } else {
+          cont_process(cont_pid);
         }
       }
       // built-in command
