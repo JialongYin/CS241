@@ -15,6 +15,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <time.h>
+#include <dirent.h>
+
 
 typedef struct process {
     char *command;
@@ -202,6 +205,7 @@ process_info* process_info_create(char *command, pid_t pid){
         prcs_info->vsize = strtol(p, &ptr_vms, 10);
       }
   }
+  fclose(statusf);
   //starttime, cputime
   snprintf(path, 40, "/proc/%d/stat", pid);
   FILE *statf = fopen(path,"r");
@@ -210,6 +214,7 @@ process_info* process_info_create(char *command, pid_t pid){
       exit(1);
   }
   fgets(line, 1000, statf);
+  fclose(statf);
   p = strtok(line, " ");
   int i = 0;
   char *ptr_cpu;
@@ -231,28 +236,36 @@ process_info* process_info_create(char *command, pid_t pid){
   char buffer_cpu[100];
   unsigned long total_seconds_cpu = (utime+stime)/sysconf(_SC_CLK_TCK);
   if (!execution_time_to_string(buffer_cpu, 100, total_seconds_cpu/60, total_seconds_cpu%60)) exit(1);
+  prcs_info->time_str = calloc(strlen(buffer_cpu)+1, sizeof(char));
   strcpy(prcs_info->time_str, buffer_cpu);
   // starttime
-  // FILE *statfsys = fopen("/proc/stat","r");
-  // if (!statfsys) {
-  //     print_script_file_error();
-  //     exit(1);
-  // }
-  // while(fgets(line, 100, statusf)) {
-  //     if(!strncmp(line, "State:", 6)) {
-  //       p = line + 7;
-  //       while(isspace(*p)) ++p;
-  //       prcs_info->state = *p;
-  //     }
-  // }
-  // p = strtok(line, " ");
-  // unsigned long btime;
-  // char buffer_start[100];
-  // unsigned long total_seconds_start = starttime/sysconf(_SC_CLK_TCK) + btime;
-  // if (!time_struct_to_string(buffer_start, 100, struct tm *tm_info)) exit(1);
-  // strcpy(prcs_info->start_str, buffer_start);
-
+  FILE *statfsys = fopen("/proc/stat","r");
+  if (!statfsys) {
+      print_script_file_error();
+      exit(1);
+  }
+  unsigned long btime;
+  while(fgets(line, 100, statfsys)) {
+      if(!strncmp(line, "btime", 5)) {
+        p = line + 6;
+        while(isspace(*p)) ++p;
+        btime = strtol(p, &ptr_cpu, 10);
+      }
+  }
+  fclose(statfsys);
+  char buffer_start[100];
+  time_t total_seconds_start = starttime/sysconf(_SC_CLK_TCK) + btime;
+  struct tm *tm_info = localtime(&total_seconds_start);
+  if (!time_struct_to_string(buffer_start, 100, tm_info)) exit(1);
+  prcs_info->start_str = calloc(strlen(buffer_start)+1, sizeof(char));
+  strcpy(prcs_info->start_str, buffer_start);
   return prcs_info;
+}
+void process_info_destroy(process_info *prcs_info) {
+  free(prcs_info->start_str);
+  free(prcs_info->time_str);
+  free(prcs_info->command);
+  free(prcs_info);
 }
 void process_info_ps(){
   print_process_info_header();
@@ -260,7 +273,68 @@ void process_info_ps(){
     process *prcss = (process *) vector_get(process_l, i);
     process_info *prcs_info = process_info_create(prcss->command, prcss->pid);
     print_process_info(prcs_info);
+    process_info_destroy(prcs_info);
   }
+  process_info *prcs_info_shell = process_info_create("./shell", getpid());
+  print_process_info(prcs_info_shell);
+  process_info_destroy(prcs_info_shell);
+}
+void process_fd_info_pfd(pid_t pid) {
+  pid_t shell_pid = getpid();
+  process *prcss = process_create("./shell", shell_pid);
+  vector_push_back(process_l, prcss);
+  for (size_t i = 0; i < vector_size(process_l); i++) {
+    process *prcss = (process *) vector_get(process_l, i);
+    if (prcss->pid == pid) {
+      char path[40];
+      snprintf(path, 40, "/proc/%d/fdinfo", pid);
+      DIR *fdinfo = opendir(path);
+      if (!fdinfo) {
+          print_script_file_error();
+          exit(1);
+      }
+      print_process_fd_info_header();
+      struct dirent *dent;
+      while((dent=readdir(fdinfo))) {
+        // if isdigit() get pos && open fd to get realpath
+        size_t fdinfo_num_read, fd_no;
+        fdinfo_num_read = sscanf(dent->d_name, "%zu", &fd_no);
+        if ( fdinfo_num_read == 1) {
+          // fd_no
+          snprintf(path, 40, "/proc/%d/fdinfo/%zu", pid, fd_no);
+          FILE *fdpos = fopen(path,"r");
+          if (!fdpos) {
+              print_script_file_error();
+              exit(1);
+          }
+          // file_pos
+          char line[100], *p, *ptr; size_t file_pos;
+          while(fgets(line, 100, fdpos)) {
+              if(!strncmp(line, "pos:", 4)) {
+                p = line + 4;
+                while(isspace(*p)) ++p;
+                file_pos = strtol(p, &ptr, 10);
+              }
+          }
+          fclose(fdpos);
+          // realpath
+          char realpath[100]; ssize_t r;
+          snprintf(path, 40, "/proc/%d/fd/%zu", pid, fd_no);
+          if( (r = readlink(path, realpath, 99)) < 0) exit(1);
+          else realpath[r] = '\0';
+          print_process_fd_info(fd_no, file_pos, realpath);
+        }
+
+      }
+      closedir(fdinfo);
+      //
+      process_destroy(shell_pid);
+      return;
+      // print_process_fd_info(size_t fd_no, size_t file_pos, char *realpath);
+    }
+  }
+  process_destroy(shell_pid);
+  print_no_process_found(pid);
 }
 
 int shell(int argc, char *argv[]) {
@@ -337,7 +411,15 @@ int shell(int argc, char *argv[]) {
       }
       // week 2 built-in command
       if (!strcmp(buffer,"ps")) {
-        // process_info_ps();
+        process_info_ps();
+      } else if (!strncmp(buffer,"pfd", 3)) {
+        pid_t pdf_pid; size_t pdf_num_read;
+        pdf_num_read = sscanf(buffer+3, "%d", &pdf_pid);
+        if ( pdf_num_read != 1) {
+          print_invalid_command(buffer);
+        } else {
+          process_fd_info_pfd(pdf_pid);
+        }
       } else if (!strncmp(buffer,"kill", 4)) {
         pid_t kill_pid; size_t kill_num_read;
         kill_num_read = sscanf(buffer+4, "%d", &kill_pid);
