@@ -33,7 +33,7 @@ CFLAGS_TSAN = $(CFLAGS_TSAN_DEBUG) -UDEBUG
 # set up linker
 LD = clang
 LDFLAGS = -lrt -lpthread -fPIC -lm
-LDFLAGS_TSAN = $(LDFLAGS) -ltsan
+LDFLAGS_TSAN = -ltsan $(LDFLAGS)
 
 # the string in grep must appear in the hostname, otherwise the Makefile will
 # not allow the assignment to compile
