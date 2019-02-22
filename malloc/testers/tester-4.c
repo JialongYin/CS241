@@ -2,7 +2,7 @@
  * Malloc Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include "tester-utils.h"
 
 #define START_MALLOC_SIZE (1 * G)
@@ -17,7 +17,8 @@ void *reduce(void *ptr, int size) {
             fprintf(stderr, "Memory failed to allocate!\n");
             exit(1);
         }
-
+        // printf("ptr1    : %p\n", ptr1);
+        // printf("ptr2: %p\n", ptr2);
         ptr1 = reduce(ptr1, size / 2);
         ptr2 = reduce(ptr2, size / 2);
 
@@ -51,6 +52,7 @@ int main() {
     while (size > STOP_MALLOC_SIZE) {
         void *ptr = malloc(size);
         ptr = reduce(ptr, size / 2);
+        // printf("pass here\n");
         free(ptr);
 
         size /= 2;

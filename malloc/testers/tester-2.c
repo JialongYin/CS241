@@ -2,14 +2,13 @@
  * Malloc Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include "tester-utils.h"
 
 #define TOTAL_ALLOCS 5 * M
 
 int main() {
     malloc(1);
-
     int i;
     int **arr = malloc(TOTAL_ALLOCS * sizeof(int *));
     if (arr == NULL) {
@@ -37,7 +36,6 @@ int main() {
 
     for (i = 0; i < TOTAL_ALLOCS; i++)
         free(arr[i]);
-
     free(arr);
     fprintf(stderr, "Memory was allocated, used, and freed!\n");
     return 0;
