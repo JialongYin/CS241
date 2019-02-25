@@ -2,7 +2,7 @@
  * Malloc Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include "tester-utils.h"
 
 #define MIN_ALLOC_SIZE 24
@@ -22,27 +22,33 @@ int main() {
     int *dictionary_elem_size = malloc(TOTAL_ALLOCS * sizeof(int));
     int dictionary_ct = 0;
     int data_written = 0;
-
     for (i = 0; i < TOTAL_ALLOCS; i++) {
         int size =
             (rand() % (MAX_ALLOC_SIZE - MIN_ALLOC_SIZE + 1)) + MIN_ALLOC_SIZE;
         void *ptr;
 
         if (realloc_ptr == NULL) {
+            printf("malloc ptr start: %d\n", i);
+            // printf("size: %d\n", size);
             ptr = malloc(size);
             data_written = 0;
+            printf("malloc ptr end: %d\n", i);
         } else {
+            printf("realloc ptr start: %d\n", i);
+            // printf("size: %d\n", size);
             ptr = realloc(realloc_ptr, size);
             realloc_ptr = NULL;
+            printf("realloc ptr end: %d\n", i);
         }
-
         if (ptr == NULL) {
             fprintf(stderr, "Memory failed to allocate!\n");
             return 1;
         }
-
-        if (rand() % 100 < CHANCE_OF_FREE)
+        // printf("dict segfault start\n");
+        if (rand() % 100 < CHANCE_OF_FREE) {
             free(ptr);
+            // printf("free ptr: %d\n", i);
+        }
         else {
             if (!data_written) {
                 *((void **)ptr) = &dictionary[dictionary_ct];
@@ -54,13 +60,14 @@ int main() {
             else {
                 *((void **)(ptr + size - sizeof(void *))) =
                     &dictionary[dictionary_ct];
+                // printf("dict segfault end\n");
                 dictionary[dictionary_ct] = ptr;
                 dictionary_elem_size[dictionary_ct] = size;
                 dictionary_ct++;
             }
         }
-    }
 
+    }
     for (i = dictionary_ct - 1; i >= 0; i--) {
         if (*((void **)dictionary[i]) != &dictionary[i]) {
             fprintf(

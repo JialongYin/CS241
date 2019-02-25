@@ -17,17 +17,13 @@ void *reduce(void *ptr, int size) {
             fprintf(stderr, "Memory failed to allocate!\n");
             exit(1);
         }
-        // printf("ptr1    : %p\n", ptr1);
-        // printf("ptr2: %p\n", ptr2);
         ptr1 = reduce(ptr1, size / 2);
         ptr2 = reduce(ptr2, size / 2);
-
         if (*((int *)ptr1) != size / 2 || *((int *)ptr2) != size / 2) {
             fprintf(stderr, "Memory failed to contain correct data after many "
                             "allocations!\n");
             exit(2);
         }
-
         free(ptr2);
         ptr1 = realloc(ptr1, size);
 
@@ -52,7 +48,6 @@ int main() {
     while (size > STOP_MALLOC_SIZE) {
         void *ptr = malloc(size);
         ptr = reduce(ptr, size / 2);
-        // printf("pass here\n");
         free(ptr);
 
         size /= 2;
