@@ -28,15 +28,15 @@ int main() {
         void *ptr;
 
         if (realloc_ptr == NULL) {
-            printf("malloc ptr start:    %d\n", i);
-            printf("size: %d\n", size);
+            // printf("malloc ptr start:    %d\n", i);
+            // printf("size: %d\n", size);
             ptr = malloc(size);
             // printf("ptr: %p\n", ptr);
             data_written = 0;
             // printf("malloc ptr end: %d\n", i);
         } else {
-            printf("realloc ptr start:    %d\n", i);
-            printf("size: %d\n", size);
+            // printf("realloc ptr start:    %d\n", i);
+            // printf("size: %d\n", size);
             ptr = realloc(realloc_ptr, size);
             // printf("ptr: %p\n", ptr);
             realloc_ptr = NULL;
