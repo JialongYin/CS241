@@ -28,17 +28,19 @@ int main() {
         void *ptr;
 
         if (realloc_ptr == NULL) {
-            printf("malloc ptr start: %d\n", i);
-            // printf("size: %d\n", size);
+            printf("malloc ptr start:    %d\n", i);
+            printf("size: %d\n", size);
             ptr = malloc(size);
+            // printf("ptr: %p\n", ptr);
             data_written = 0;
-            printf("malloc ptr end: %d\n", i);
+            // printf("malloc ptr end: %d\n", i);
         } else {
-            printf("realloc ptr start: %d\n", i);
-            // printf("size: %d\n", size);
+            printf("realloc ptr start:    %d\n", i);
+            printf("size: %d\n", size);
             ptr = realloc(realloc_ptr, size);
+            // printf("ptr: %p\n", ptr);
             realloc_ptr = NULL;
-            printf("realloc ptr end: %d\n", i);
+            // printf("realloc ptr end: %d\n", i);
         }
         if (ptr == NULL) {
             fprintf(stderr, "Memory failed to allocate!\n");
@@ -47,7 +49,6 @@ int main() {
         // printf("dict segfault start\n");
         if (rand() % 100 < CHANCE_OF_FREE) {
             free(ptr);
-            // printf("free ptr: %d\n", i);
         }
         else {
             if (!data_written) {
