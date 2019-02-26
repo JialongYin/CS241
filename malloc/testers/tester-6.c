@@ -9,7 +9,6 @@
 #define MAX_ALLOC_SIZE (K * K * K) // (K * K * K)
 
 void *malloc_and_break(void *region, int c, size_t len) {
-    // printf("malloc_and_break segfault start: %p, %zu\n", region, len);
     if (len < MIN_ALLOC_SIZE) {
         return region;
     }
@@ -57,7 +56,6 @@ int main() {
         void *mem = malloc(len);
         memset(mem, 0xff, len);
         free(malloc_and_break(mem, 0xff, len));
-        // printf("segfault solved\n");
         len /= 3;
     }
 
