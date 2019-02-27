@@ -2,10 +2,10 @@
  * Critical Concurrency Lab
  * CS 241 - Spring 2019
  */
- 
+
 
 #include "semamore.h"
-
+#include <stdlib.h>
 /**
  * Initializes the Semamore. Important: the struct is assumed to have been
  * allocated by the user.
@@ -16,6 +16,10 @@
  */
 void semm_init(Semamore *s, int value, int max_val) {
     /* Your code here */
+    s->value = value;
+    s->max_val = max_val;
+    pthread_mutex_init(&s->m, NULL);
+    pthread_cond_init(&s->cv, NULL);
 }
 
 /**
@@ -24,6 +28,13 @@ void semm_init(Semamore *s, int value, int max_val) {
  */
 void semm_wait(Semamore *s) {
     /* Your code here */
+  pthread_mutex_lock(&s->m);
+  while (s->value == 0) {
+      pthread_cond_wait(&s->cv, &s->m); /*unlock mutex, wait, relock mutex*/
+  }
+  s->value--;
+  pthread_cond_signal(&s->cv);
+  pthread_mutex_unlock(&s->m);
 }
 
 /**
@@ -33,6 +44,13 @@ void semm_wait(Semamore *s) {
  */
 void semm_post(Semamore *s) {
     /* Your code here */
+  pthread_mutex_lock(&s->m);
+  while (s->value == s->max_val) {
+      pthread_cond_wait(&s->cv, &s->m); /*unlock mutex, wait, relock mutex*/
+  }
+  s->value++;
+  pthread_cond_signal(&s->cv);
+  pthread_mutex_unlock(&s->m);
 }
 
 /**
@@ -42,4 +60,5 @@ void semm_post(Semamore *s) {
  */
 void semm_destroy(Semamore *s) {
     /* Your code here */
+    free(s);
 }
