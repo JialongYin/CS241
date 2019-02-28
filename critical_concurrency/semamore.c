@@ -60,5 +60,6 @@ void semm_post(Semamore *s) {
  */
 void semm_destroy(Semamore *s) {
     /* Your code here */
-    free(s);
+    pthread_mutex_destroy(&(s->m));
+    pthread_cond_destroy(&(s->cv));
 }
