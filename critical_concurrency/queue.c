@@ -64,11 +64,12 @@ void queue_push(queue *this, void *data) {
     /* Your code here */
     pthread_mutex_lock(&this->m);
 
-    while (this->max_size > 0 && this->size == this->max_size) {
+    while (this->max_size > 0 && this->size >= this->max_size) {
       pthread_cond_wait(&this->cv, &this->m);
     }
     queue_node *newNode = malloc(sizeof(queue_node));
     newNode->data = data;
+    newNode->next = NULL;
     if (this->head)
       this->head->next = newNode;
     this->head = newNode;
@@ -89,9 +90,13 @@ void *queue_pull(queue *this) {
     while (this->size == 0) {
       pthread_cond_wait(&this->cv, &this->m);
     }
-    void *data = NULL;
-    data = this->tail->data;
+    void *data = this->tail->data;
+    queue_node *temp = this->tail;
     this->tail = this->tail->next;
+    free(temp);
+    if (!this->tail) {
+      this->head = NULL;
+    }
     this->size--;
     if (this->max_size > 0 && this->size < this->max_size) {
       pthread_cond_broadcast(&this->cv);
