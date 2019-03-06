@@ -1,6 +1,7 @@
 /**
  * Deadlock Demolition Lab
  * CS 241 - Spring 2019
+ partner:jialong2, qishanz2, yichiz3
  */
 
 #include "graph.h"
