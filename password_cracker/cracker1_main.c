@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     }
 
     // capture ctrl-c
-    signal(SIGINT, threadStatusPrint);
+    // signal(SIGINT, threadStatusPrint);
 
     double start_time = getTime();
     double start_cpu_time = getCPUTime();

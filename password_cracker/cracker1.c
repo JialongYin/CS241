@@ -112,6 +112,8 @@ int start(size_t thread_count) {
     }
     queue_destroy(q);
     v1_print_summary(numRecovered, numFailed);
+    pthread_mutex_destroy(&m1);
+    pthread_mutex_destroy(&m2);
     return 0; // DO NOT change the return code since AG uses it to check if your
               // program exited normally
 }
