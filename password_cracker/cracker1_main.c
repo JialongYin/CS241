@@ -2,7 +2,7 @@
  * Password Cracker Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include "utils.h"
 #include <signal.h>
 #include <stdio.h>

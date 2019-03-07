@@ -2,7 +2,7 @@
  * Password Cracker Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     }
 
     // capture ctrl-c
-    signal(SIGINT, threadStatusPrint);
+    // signal(SIGINT, threadStatusPrint);
 
     // student code called here
     int ret = start(thread_count);
