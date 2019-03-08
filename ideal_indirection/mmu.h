@@ -53,6 +53,9 @@ mmu *mmu_create();
  * This function assumes that all paging structures (page directory and page
  * table)
  * are paged in memory and does no error checking.
+ * NOTE: You do not need to implement this function. However, you may choose
+ *       to implement this and use this as a helper function, or use this in
+ *       your own test cases if you choose to do so
  */
 page_table_entry *mmu_get_pte(mmu *this, uintptr_t virtual_address, size_t pid);
 
@@ -120,7 +123,7 @@ void mmu_add_process(mmu *this, size_t pid);
   Free all the physical memory used by a certain process given by 'pid', so that
   other process can use that space.
 */
-void mmu_remvoe_process(mmu *this, size_t pid);
+void mmu_remove_process(mmu *this, size_t pid);
 
 /**
   Fress all memory used by the mmu
