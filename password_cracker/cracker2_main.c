@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     }
 
     // capture ctrl-c
-    // signal(SIGINT, threadStatusPrint);
+    signal(SIGINT, threadStatusPrint);
 
     // student code called here
     int ret = start(thread_count);

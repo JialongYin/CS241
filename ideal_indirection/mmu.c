@@ -2,7 +2,7 @@
  * Ideal Indirection Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include "mmu.h"
 #include <assert.h>
 #include <dirent.h>
@@ -22,6 +22,25 @@ void mmu_read_from_virtual_address(mmu *this, addr32 virtual_address,
     assert(pid < MAX_PROCESS_ID);
     assert(num_bytes + (virtual_address % PAGE_SIZE) <= PAGE_SIZE);
     // TODO implement me
+    if (pid != this->curr_pid) {
+      tlb_flush(&(this->tlb));
+      this->curr_pid = pid;
+    }
+    addr32 base_virtual_addr = virtual_address >> NUM_OFFSET_BITS;
+    page_table_entry *pte = NULL;
+    if (!(pte = tlb_get_pte(&(this->tlb), base_virtual_addr))) {
+      // check page table
+      pte = mmu_get_pte(this, virtual_address, pid);
+      mmu_tlb_miss(this);
+    }
+    tlb_add_pte(this->tlb, base_virtual_addr, pte);
+    
+    buffer = num_bytes + get_system_pointer_from_pte(pte);
+
+
+
+    page_table_entry *pte = NULL;
+    if ( !(pte = tlb_get_pte(&(this->tlb), virtual_address)) )
 }
 
 void mmu_write_to_virtual_address(mmu *this, addr32 virtual_address, size_t pid,

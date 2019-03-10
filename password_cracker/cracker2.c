@@ -21,10 +21,10 @@ typedef struct _task_t {
 task_t *task_g = NULL;
 size_t thread_count_g = 0;
 pthread_barrier_t mybarrier;
-pthread_cond_t cv;
-pthread_mutex_t m;
+// pthread_cond_t cv;
+// pthread_mutex_t m;
 int flag_done = 0;
-int start_work = 0;
+// int start_work = 0;
 int found = 0;
 char *password = NULL;
 pthread_mutex_t m_h;
@@ -41,11 +41,13 @@ void *myfunc(void *i) {
   cdata.initialized = 0;
   int threadId = (long) i;
   while (1) {
-    pthread_mutex_lock(&m);
-    while (!start_work) {
-      pthread_cond_wait(&cv, &m);
-    }
-    pthread_mutex_unlock(&m);
+    // pthread_mutex_lock(&m);
+    // while (!start_work) {
+    //   pthread_cond_wait(&cv, &m);
+    // }
+    // pthread_mutex_unlock(&m);
+    pthread_barrier_wait(&mybarrier);
+
     if (flag_done) break;
     long start_index = 0;
     long count = 0;
@@ -55,9 +57,9 @@ void *myfunc(void *i) {
     strcpy(pwd, task_g->pwd_k);
     setStringPosition(pwd+known_letter, start_index);
     v2_print_thread_start(threadId, task_g->username, start_index, pwd);
-
     int hashCount = 0;
     char *hashed = NULL;
+    // printf("threadId: %d, count: %lu\n", threadId, count);
     for (long i = 0; i < count; i++) {
       hashed = crypt_r(pwd, "xx", &cdata);
       hashCount++;
@@ -80,6 +82,8 @@ void *myfunc(void *i) {
       }
       incrementString(pwd);
     }
+    // printf("threadId: %d, hashCount: %d\n", threadId, hashCount);
+
     free(pwd);
     if (!found) {
       pthread_mutex_lock(&m_h);
@@ -122,21 +126,23 @@ int start(size_t thread_count) {
     queue_push(q, NULL);
     free(buffer);
 
-    pthread_cond_init(&cv, NULL);
-    pthread_mutex_init(&m, NULL);
+    // pthread_cond_init(&cv, NULL);
+    // pthread_mutex_init(&m, NULL);
     pthread_mutex_init(&m_h, NULL);
+    pthread_barrier_init(&mybarrier, NULL, thread_count+1);
     thread_count_g = thread_count;
     pthread_t tid[thread_count];
     for (size_t i = 0; i < thread_count; i++) {
       pthread_create(tid+i, NULL, myfunc, (void *)(i+1));
     }
-    pthread_barrier_init(&mybarrier, NULL, thread_count+1);
     while ((task_g = queue_pull(q))) {
       double start_time = getTime();
       double start_cpu_time = getCPUTime();
       v2_print_start_user(task_g->username);
-      start_work = 1;
-      pthread_cond_broadcast(&cv);
+      // start_work = 1;
+      // pthread_cond_broadcast(&cv);
+      pthread_barrier_wait(&mybarrier);
+
       pthread_barrier_wait(&mybarrier);
       int result;
       if (found) result = 0; else result = 1;
@@ -147,23 +153,24 @@ int start(size_t thread_count) {
         free(password);
         password = NULL;
       }
-      start_work = 0;
+      // start_work = 0;
       found = 0;
       hashSum = 0;
       task_destroy(task_g);
       pthread_barrier_wait(&mybarrier);
     }
     flag_done = 1;
-    start_work = 1;
-    pthread_cond_broadcast(&cv);
+    pthread_barrier_wait(&mybarrier);
+    // start_work = 1;
+    // pthread_cond_broadcast(&cv);
 
     for (size_t j = 0; j < thread_count; j++) {
       pthread_join(tid[j], NULL);
     }
     queue_destroy(q);
-    pthread_mutex_destroy(&m);
+    // pthread_mutex_destroy(&m);
     pthread_mutex_destroy(&m_h);
-    pthread_cond_destroy(&cv);
+    // pthread_cond_destroy(&cv);
     pthread_barrier_destroy(&mybarrier);
     return 0; // DO NOT change the return code since AG uses it to check if your
               // program exited normally
