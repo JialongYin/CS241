@@ -17,14 +17,14 @@ typedef struct _task_t {
   char *pwd_hash;
   char *pwd_k;
 } task_t;
-task_t *task_g = NULL;
-size_t thread_count_g = 0;
+static task_t *task_g = NULL;
+static size_t thread_count_g = 0;
 pthread_barrier_t mybarrier;
-int flag_done = 0;
-int found = 0;
-char *password = NULL;
+static int flag_done = 0;
+static int found = 0;
+static char *password = NULL;
 pthread_mutex_t m_h;
-int hashSum = 0;
+static int hashSum = 0;
 
 void task_destroy(task_t *task) {
   free(task->username);
@@ -37,6 +37,7 @@ void *myfunc(void *i) {
   cdata.initialized = 0;
   int threadId = (long) i;
   char *pwd = calloc(8+1, sizeof(char));
+  char *pwd_hash = calloc(13+1, sizeof(char)); // pwd_hash
   while (1) {
     pthread_barrier_wait(&mybarrier);
     if (flag_done) break;
@@ -49,12 +50,13 @@ void *myfunc(void *i) {
     v2_print_thread_start(threadId, task_g->username, start_index, pwd);
     int hashCount = 0;
     char *hashed = NULL;
+    strcpy(pwd_hash, task_g->pwd_hash); // pwd_hash
     for (long i = 0; i < count; i++) {
       hashed = crypt_r(pwd, "xx", &cdata);
-      hashCount++;
-      if (!strcmp(hashed, task_g->pwd_hash)) {
-        found = 1;
+      hashCount++; // pwd_hash
+      if (!strcmp(hashed, pwd_hash)) {
         strcpy(password, pwd);
+        found = 1;
         pthread_mutex_lock(&m_h);
         v2_print_thread_result(threadId, hashCount, 0);
         hashSum += hashCount;
@@ -79,6 +81,7 @@ void *myfunc(void *i) {
     pthread_barrier_wait(&mybarrier);
   }
   free(pwd);
+  free(pwd_hash);
   return NULL;
 }
 int start(size_t thread_count) {
@@ -126,8 +129,10 @@ int start(size_t thread_count) {
       double elapsed = getTime() - start_time;
       double totalCPUTime = getCPUTime() - start_cpu_time;
       v2_print_summary(task_g->username, password, hashSum, elapsed, totalCPUTime, result);
+      pthread_mutex_lock(&m_h);
       found = 0;
       hashSum = 0;
+      pthread_mutex_unlock(&m_h);
     }
     flag_done = 1;
     task_destroy(task_g);
