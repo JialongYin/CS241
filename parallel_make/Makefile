@@ -1,29 +1,39 @@
-CC = gcc
-
 OBJS_DIR = .objs
-EXE_PARMAKE=parmake
-EXES_STUDENT=$(EXE_PARMAKE)
-# list object file dependencies for each
-OBJS_PARMAKE=parmake.o parser.o rule.o parmake_main.o format.o
 
-INC=-I./includes/
+# define all the student executables
+EXE_PARMAKE = parmake
+EXES_STUDENT = $(EXE_PARMAKE)
+
+# list object file dependencies for each
+OBJS_PARMAKE = parmake.o parser.o rule.o parmake_main.o format.o
+
+INC = -I./includes/
 WARNINGS = -Wall -Wextra -Werror -Wno-error=unused-parameter
+
+CC = gcc
 CFLAGS_DEBUG   = -O0 $(WARNINGS) $(INC) -g -std=c99 -c -MMD -MP -D_GNU_SOURCE -DTHREAD_SAFE -pthread -DDEBUG
 CFLAGS_RELEASE = -O2 $(WARNINGS) $(INC) -std=c99 -c -MMD -MP -D_GNU_SOURCE -DTHREAD_SAFE -pthread
-CFLAGS_TSAN = $(CFLAGS_RELEASE)
+
+CFLAGS_TSAN_DEBUG = $(CFLAGS_DEBUG) -fsanitize=thread -DSANITIZE_THREADS
+CFLAGS_TSAN = $(CFLAGS_TSAN_DEBUG) -UDEBUG
 
 # set up linker
 PROVIDED_LIBRARIES:=$(shell find libs/ -type f -name '*.a' 2>/dev/null)
 PROVIDED_LIBRARIES:=$(PROVIDED_LIBRARIES:libs/lib%.a=%)
-LD=$(CC)
+
+LD = $(CC)
 LDFLAGS = -pthread -Llibs/ $(foreach lib,$(PROVIDED_LIBRARIES),-l$(lib)) -lm
 LDFLAGS_TSAN = -ltsan $(LDFLAGS)
 
--include $(OBJS_DIR)/*.d
-
-$(OBJS_DIR):
-	@mkdir -p $(OBJS_DIR)
-
+# the string in grep must appear in the hostname, otherwise the Makefile will
+# not allow the assignment to compile
+IS_VM=$(shell hostname | grep "cs241")
+VM_OVERRIDE=$(shell echo $$HOSTNAME)
+ifeq ($(IS_VM),)
+ifneq ($(VM_OVERRIDE),cs241grader)
+$(error This assignment must be compiled on the CS241 VMs)
+endif
+endif
 
 .PHONY: all
 all: release
@@ -32,10 +42,31 @@ all: release
 # run clean before building debug so that all of the release executables
 # disappear
 .PHONY: release
+.PHONY: debug
 .PHONY: tsan
+.PHONY: debug-tsan
 
 release: $(EXES_STUDENT)
-tsan:    clean $(EXES_STUDENT:%=%-tsan)
+debug: clean $(EXES_STUDENT:%=%-debug)
+tsan: clean $(EXES_STUDENT:%=%-tsan)
+debug-tsan: clean $(EXES_STUDENT:%=%-debug-tsan)
+
+# include dependencies
+-include $(OBJS_DIR)/*.d
+
+$(OBJS_DIR):
+	@mkdir -p $(OBJS_DIR)
+
+# patterns to create objects
+# keep the debug and release postfix for object files so that we can always
+# separate them correctly
+$(OBJS_DIR)/%-debug.o: %.c | $(OBJS_DIR)
+	@mkdir -p $(basename $@)
+	$(CC) $(CFLAGS_DEBUG) $< -o $@
+
+$(OBJS_DIR)/%-debug-tsan.o: %.c | $(OBJS_DIR)
+	@mkdir -p $(basename $@)
+	$(CC) $(CFLAGS_TSAN_DEBUG) $< -o $@
 
 $(OBJS_DIR)/%-tsan.o: %.c | $(OBJS_DIR)
 	@mkdir -p $(basename $@)
