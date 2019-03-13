@@ -56,8 +56,8 @@ void *myfunc(void *i) {
       hashCount++; // pwd_hash
       if (!strcmp(hashed, pwd_hash)) {
         strcpy(password, pwd);
-        found = 1;
         pthread_mutex_lock(&m_h);
+        found = 1;
         v2_print_thread_result(threadId, hashCount, 0);
         hashSum += hashCount;
         pthread_mutex_unlock(&m_h);
@@ -105,7 +105,7 @@ int start(size_t thread_count) {
     ssize_t bytes_read;
     while (1) {
       bytes_read = getline(&buffer,&size, stdin);
-      if (bytes_read == -1){
+      if (bytes_read <= 0){
         break;
       }
       if (bytes_read>0 && buffer[bytes_read-1] == '\n') {
