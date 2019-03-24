@@ -1,6 +1,6 @@
-all: a c
+all: a c 
 	echo "This command should not run, since 'a' belongs to a dependency"
-	echo "cycle. 'e' should not run either unless you explicitly list it" 
+	echo "cycle. 'e' should not run either unless you explicitly list it"
 	echo "as a goal, since we must drop the 'all' rule altogether."
 
 a: b
@@ -18,4 +18,3 @@ d: a
 e:
 	echo "This should only print out when your goals include"
 	echo "'e' explicitly."
-
