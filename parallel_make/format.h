@@ -2,7 +2,6 @@
  * Parallel Make Lab
  * CS 241 - Spring 2019
  */
- 
 #pragma once
 
 /**

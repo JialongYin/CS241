@@ -2,7 +2,7 @@
  * Parallel Make Lab
  * CS 241 - Spring 2019
  */
- 
+
 #include "parmake.h"
 
 #include <getopt.h>

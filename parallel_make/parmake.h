@@ -2,7 +2,6 @@
  * Parallel Make Lab
  * CS 241 - Spring 2019
  */
- 
 #pragma once
 /**
  * this file exists so that we can provide a main method which does a variety of
