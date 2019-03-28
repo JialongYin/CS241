@@ -45,7 +45,6 @@ bool isCyclic(char* target) {
     visited = NULL;
     return false;
 }
-//
 bool all_satisfied(vector *neighbors) {
   for (size_t i = 0; i < vector_size(neighbors); i++) {
     char *neighbor = vector_get(neighbors, i);
@@ -54,12 +53,10 @@ bool all_satisfied(vector *neighbors) {
   }
   return true;
 }
-//
 bool isFailed(char* target) {
     int flag_run = 0;
-    if (access(target, F_OK) < 0) {
+    if (access(target, F_OK) < 0)
       flag_run = 1;
-    }
     vector *neighbors = graph_neighbors(g, target);
     for (size_t i = 0; i < vector_size(neighbors); i++) {
       char *neighbor = vector_get(neighbors, i);
@@ -70,9 +67,8 @@ bool isFailed(char* target) {
         stat(target, &trg);
         struct stat nbr;
         stat(neighbor, &nbr);
-        if (difftime(trg.st_mtime, nbr.st_mtime) < 0) {
+        if (difftime(trg.st_mtime, nbr.st_mtime) < 0) 
           flag_run = 1;
-        }
       }
       if (isFailed(neighbor))
           return true;
