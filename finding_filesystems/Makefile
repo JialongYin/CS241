@@ -16,7 +16,7 @@ CC = clang
 WARNINGS = -Wall -Wextra -Werror -Wno-error=unused-parameter -Wno-error=unused-result -Wmissing-declarations -Wmissing-variable-declarations
 INC=-I./includes/
 CFLAGS_COMMON = -O0 $(WARNINGS) $(INC) -std=c99 -c -MMD -MP -D_GNU_SOURCE -fPIC
-CFLAGS_RELEASE = $(CFLAGS_COMMON) 
+CFLAGS_RELEASE = $(CFLAGS_COMMON)
 CFLAGS_DEBUG = $(CFLAGS_COMMON) -g
 
 # set up linker
@@ -100,4 +100,4 @@ reset:
 .PHONY: testfs
 testfs: test.fs
 test.fs:
-	wget https://pages.github-dev.cs.illinois.edu/cs241-fa18/_resources/test.fs
+	wget `cat test.fs.url`
