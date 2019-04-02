@@ -67,10 +67,11 @@ bool isFailed(char* target) {
         stat(target, &trg);
         struct stat nbr;
         stat(neighbor, &nbr);
-        if (difftime(trg.st_mtime, nbr.st_mtime) < 0) 
+        if (difftime(trg.st_mtime, nbr.st_mtime) < 0)
           flag_run = 1;
       }
-      if (isFailed(neighbor))
+      rule_t *rule_nbr = (rule_t *) graph_get_vertex_value(g, neighbor);
+      if (!(rule_nbr->state) && isFailed(neighbor))
           return true;
     }
     if (vector_size(neighbors)) {
