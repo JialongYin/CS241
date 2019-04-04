@@ -1,6 +1,7 @@
 /**
  * Charming Chatroom
  * CS 241 - Spring 2019
+ partner; jialong2, qishanz2
  */
 #include <arpa/inet.h>
 #include <errno.h>
@@ -33,6 +34,7 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
  * Used to set flag to end server.
  */
 void close_server() {
+    fprintf(stderr, "close_server handler\n" );
     endSession = 1;
     // add any additional flags here you want.
 }
@@ -75,19 +77,89 @@ void cleanup() {
  *    - perror() for any other call
  */
 void run_server(char *port) {
+    /* set up variables */
+    pthread_t tids[MAX_CLIENTS];
+    size_t i = 0;
+    for (; i < MAX_CLIENTS; i++) {
+        clients[i] = -1;
+    }
+
     /*QUESTION 1*/
     /*QUESTION 2*/
     /*QUESTION 3*/
 
+	  int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    struct addrinfo hints, *result;
+    memset(&hints, 0, sizeof(hints));
+
+    hints.ai_family = AF_INET;       // IPv4
+    hints.ai_socktype = SOCK_STREAM; // TCP
+    hints.ai_flags = AI_PASSIVE;     // passive server
+
     /*QUESTION 8*/
+    if ( setsockopt(sock_fd, SOL_SOCKET,  SO_REUSEADDR, &(int){ 1 }, sizeof(int)) != 0 ) {
+      perror(NULL);
+      exit(1);
+    }
 
     /*QUESTION 4*/
     /*QUESTION 5*/
     /*QUESTION 6*/
+    int s = getaddrinfo(NULL, port, &hints, &result);
+    if (s != 0) {
+      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+    	exit(1);
+    }
 
     /*QUESTION 9*/
+    if ( bind(sock_fd, result->ai_addr, result->ai_addrlen) != 0 ) {
+  		perror(NULL);
+      exit(1);
+  	}
+
 
     /*QUESTION 10*/
+    if ( listen(sock_fd, MAX_CLIENTS) != 0 ) { // Start accepting connections. kernel would handle the handshake. We can specify the number of backlog connection.
+  		perror(NULL);
+      exit(1);
+  	}
+
+    serverSocket = sock_fd;
+    freeaddrinfo(result);
+
+    /*QUESTION 11*/
+    while (endSession == 0) {
+      // accept a new client
+      int client_fd = accept(sock_fd, NULL, NULL);
+    	if (client_fd < 0) {
+    	    perror(NULL);
+    	    exit(1);
+    	}
+
+      // increase the number of clientsCount
+      pthread_mutex_lock(&mutex);
+      clientsCount ++;
+      // shut it down if MAX_CLIENTS has been reach
+      if (clientsCount > MAX_CLIENTS) {
+        shutdown(client_fd,SHUT_RDWR);
+        close(client_fd);
+        clientsCount--;
+        pthread_mutex_unlock(&mutex);
+        continue;
+      }
+
+      // create a new thread for each new client
+      // find a usable clientId for new client
+      size_t clientId = 0;
+      for (; clientId < MAX_CLIENTS; clientId++) {
+        if (clients[clientId] == -1) break;
+      }
+      clients[clientId] = client_fd;
+      pthread_create(tids+clientId, NULL, process_client, (void*)clientId);
+
+      pthread_mutex_unlock(&mutex);
+    }
 }
 
 /**
