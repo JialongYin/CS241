@@ -20,15 +20,17 @@
 BinaryTreeNode *wordBinarySearch(uint32_t offset, char *addr, char *word) {
   if (offset == 0) return NULL;
   BinaryTreeNode *node = (BinaryTreeNode *) (addr+offset);
+  BinaryTreeNode *word_node;
   if (strcmp(word, node->word) == 0) {
     return node;
-  }
-  BinaryTreeNode *word_node;
-  if ((word_node = wordBinarySearch(node->left_child, addr, word))) {
-    return word_node;
-  }
-  if ((word_node = wordBinarySearch(node->right_child, addr, word))) {
-    return word_node;
+  } else if (strcmp(word, node->word) < 0) {
+    if ((word_node = wordBinarySearch(node->left_child, addr, word))) {
+      return word_node;
+    }
+  } else {
+    if ((word_node = wordBinarySearch(node->right_child, addr, word))) {
+      return word_node;
+    }
   }
   return NULL;
 }

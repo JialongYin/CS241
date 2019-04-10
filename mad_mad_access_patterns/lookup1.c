@@ -12,25 +12,23 @@
 
   ./lookup1 <data_file> <word> [<word> ...]
 */
-BinaryTreeNode *wordBinarySearch(uint32_t offset, FILE *file, char *word) {
-  if (offset == 0) return NULL;
+int wordBinarySearch(uint32_t offset, FILE *file, char *word) {
+  if (offset == 0) return 0;
   fseek(file, offset, SEEK_SET);
-  BinaryTreeNode *node = calloc(1,sizeof(BinaryTreeNode)+10);
-  fread(node, sizeof(BinaryTreeNode)+10, 1, file);
-  if (strcmp(word, node->word) == 0) {
-    return node;
+  BinaryTreeNode node;
+  fread(&node, sizeof(BinaryTreeNode), 1, file);
+  fseek(file, offset+sizeof(BinaryTreeNode), SEEK_SET);
+  char word_node[10];
+  fread(word_node, 10, 1, file);
+  if (strcmp(word, word_node) == 0) {
+    printFound(word_node, node.count, node.price);
+    return 1;
+  } else if (strcmp(word, word_node) < 0) {
+    if (wordBinarySearch(node.left_child, file, word)) return 1;
+  } else  {
+    if (wordBinarySearch(node.right_child, file, word)) return 1;
   }
-  BinaryTreeNode *word_node;
-  if ((word_node = wordBinarySearch(node->left_child, file, word))) {
-    free(node);
-    return word_node;
-  }
-  if ((word_node = wordBinarySearch(node->right_child, file, word))) {
-    free(node);
-    return word_node;
-  }
-  free(node);
-  return NULL;
+  return 0;
 }
 int main(int argc, char **argv) {
   if (argc < 3) {
@@ -50,11 +48,8 @@ int main(int argc, char **argv) {
     exit(2);
   }
   for (int i = 2; i < argc; i++) {
-    BinaryTreeNode *word_node = wordBinarySearch(BINTREE_ROOT_NODE_OFFSET, file, argv[i]);
-    if (word_node) {
-      printFound(word_node->word, word_node->count, word_node->price);
-      free(word_node);
-    } else {
+    int find = wordBinarySearch(BINTREE_ROOT_NODE_OFFSET, file, argv[i]);
+    if (!find) {
       printNotFound(argv[i]);
     }
   }
