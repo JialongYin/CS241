@@ -1,6 +1,7 @@
 /**
  * Mad Mad Access Patterns
  * CS 241 - Spring 2019
+ Partner: jialong2, yichiz3, xy6
  */
 #include "tree.h"
 #include "utils.h"
