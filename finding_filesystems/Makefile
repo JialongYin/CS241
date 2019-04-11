@@ -83,10 +83,10 @@ $(MINIX_EXE)-debug: $(OBJS_ALL:%.o=$(OBJS_DIR)/%-debug.o)
 	$(LD) $^ $(LDFLAGS) -o $@
 
 $(EXES_TEST): $(OBJS_TEST:%.o=$(OBJS_DIR)/%-release.o)
-	$(LD) $^ -o minixfs_test
+	$(LD) $^ $(LDFLAGS) -o minixfs_test
 
 $(EXES_TEST)-debug: $(OBJS_TEST:%.o=$(OBJS_DIR)/%-debug.o)
-	$(LD) $^ -o minixfs_test-debug
+	$(LD) $^ $(LDFLAGS) -o minixfs_test-debug
 
 .PHONY: clean
 clean:
