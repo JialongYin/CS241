@@ -59,7 +59,6 @@ ssize_t read_all_from_socket(int socket, char *buffer, size_t count) {
       }
       bytes_recd += ret;
     }
-    // bytes_recd is 0 if socket is disconnected?
     return bytes_recd;
 }
 
