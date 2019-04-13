@@ -16,142 +16,120 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-static const size_t MESSAGE_SIZE_DIGITS = 8;
 char **parse_args(int argc, char **argv);
 verb check_args(char **args);
+
 int connect_to_server(char **args);
-void write_cmd(char **args);
-ssize_t write_to_socket(int socket, const char *buffer, size_t count);
-void read_response(char **args, int socket);
-ssize_t read_from_socket(int socket, char *buffer, size_t count);
-static int serverSocket;
+void write_cmd(char **args, int socket, verb method);
+void read_response(char **args, int socket, verb method);
+
 int main(int argc, char **argv) {
     // Good luck!
     char **args = parse_args(argc, argv);
-    check_args(args); // {host, port, method, remote, local, NULL}
-    serverSocket = connect_to_server(args);
-    write_cmd(args);
+    verb method = check_args(args); // {host, port, method, remote, local, NULL}
+
+    int serverSocket = connect_to_server(args);
+    write_cmd(args, serverSocket, method);
     if (shutdown(serverSocket, SHUT_WR) != 0) {
         perror("shutdown()");
     }
-    read_response(args, serverSocket);
+    read_response(args, serverSocket, method);
     shutdown(serverSocket, SHUT_RD);
     close(serverSocket);
     free(args);
 }
-void read_response(char **args, int socket) {
-  char *buffer = calloc(1, strlen("OK\n")+1);
+void print_any_err(size_t bytes_rd, size_t size) {
+  if (bytes_rd == 0) {
+    print_connection_closed();
+    exit(1);
+  } else if (bytes_rd < size) {
+    print_too_little_data();
+    exit(1);
+  } else if (bytes_rd > size) {
+    print_received_too_much_data();
+    exit(1);
+  }
+}
+void read_response(char **args, int socket, verb method) {
+  char *buffer = calloc(1,strlen("OK\n")+1);
   size_t bytes_rd = read_from_socket(socket, buffer, strlen("OK\n"));
   if (strcmp(buffer, "OK\n") == 0) {
     fprintf(stdout, "%s", buffer);
-    // OK response content
-    char *command = args[2];
-    if (strcmp(command, "DELETE") == 0 || strcmp(command, "PUT") == 0) {
+    if (method == DELETE || method == PUT) {
       print_success();
-    } else if (strcmp(command, "GET") == 0) {
-      unsigned long long size;
-      read_from_socket(socket, (char *)&size, MESSAGE_SIZE_DIGITS);
-      char *buffer_f = calloc(1, size);
-      read_from_socket(socket, buffer_f, size);
-      fprintf(stdout, "%llu%s", size, buffer_f);
-      // handle open file
+    } else if (method == GET) {
+      size_t size;
+      read_from_socket(socket, (char *)&size, sizeof(size_t));
+      char *buffer_f = calloc(1, size+5+1);
+      bytes_rd = read_from_socket(socket, buffer_f, size+5);
+      print_any_err(bytes_rd, size);
+      fprintf(stdout, "%zu%s", size, buffer_f);
+      umask(S_IRWXU | S_IRWXG);
+      FILE *local = fopen(args[4], "a+");
+      if (!local) {
+        perror(NULL);
+        exit(1);
+      }
+      fwrite(buffer_f, 1, size, local);
+      fclose(local);
+      free(buffer_f);
+    } else if (method == LIST) {
+      size_t size;
+      bytes_rd = read_from_socket(socket, (char *)&size, sizeof(size_t));
+      char *buffer_f = calloc(1, size+5+1);
+      bytes_rd = read_from_socket(socket, buffer_f, size+5);
+      print_any_err(bytes_rd, size);
+      fprintf(stdout, "%zu%s", size, buffer_f);
+      free(buffer_f);
     }
-    return;
-  }
-  buffer = realloc(buffer, strlen("ERROR\n")+1);
-  read_from_socket(socket, buffer+bytes_rd, strlen("ERROR\n")-bytes_rd);
-  if (strcmp(buffer, "ERROR") == 0) {
-    fprintf(stdout, "%s", buffer);
-    char *err = calloc(1, 20);
-    read_from_socket(socket, err, 20);
-    print_error_message(err);
   } else {
-    print_invalid_response();
+    buffer = realloc(buffer, strlen("ERROR\n")+1);
+    read_from_socket(socket, buffer+bytes_rd, strlen("ERROR\n")-bytes_rd);
+    if (strcmp(buffer, "ERROR\n") == 0) {
+      fprintf(stdout, "%s", buffer);
+      char err[20] = {0};
+      if (!read_from_socket(socket, err, 20))
+        print_connection_closed();
+      print_error_message(err);
+    } else {
+      print_invalid_response();
+    }
   }
+  free(buffer);
 }
-ssize_t read_from_socket(int socket, char *buffer, size_t count) {
-    // Your Code Here
-    size_t bytes_recd = 0;
-    while (bytes_recd < count) {
-      ssize_t ret = read(socket, buffer + bytes_recd, count - bytes_recd);
-      // if socket disconnected
-      if (ret == 0) {
-        break;
-      }
-      // continue if signal interrupt
-      if (ret == -1 && errno == EINTR) {
-        continue;
-      }
-      // return -1 on failure
-      if (ret == -1) {
-        print_invalid_response();
-        exit(1);
-      }
-      bytes_recd += ret;
-    }
-    if (bytes_recd == 0) {
-      print_connection_closed();
-      exit(1);
-    }
-    return bytes_recd;
-}
-ssize_t write_to_socket(int socket, const char *buffer, size_t count) {
-    size_t bytes_write = 0;
-    while (bytes_write < count) {
-      ssize_t ret = write(socket, buffer + bytes_write, count - bytes_write);
-      // if socket disconnected
-      if (ret == 0) {
-        break;
-      }
-      // continue if signal interrupt
-      if (ret == -1 && errno == EINTR) {
-        continue;
-      }
-      // return -1 on failure
-      if (ret == -1) {
-        fprintf(stderr, "write fail\n");
-        exit(1);
-      }
-      bytes_write += ret;
-    }
-    if (bytes_write < count) {
-      print_connection_closed();
-      exit(1);
-    }
-    return bytes_write;
-}
-void write_cmd(char **args) {
-  // code here
-  char *command = args[2];
+
+void write_cmd(char **args, int socket, verb method) {
   char *msg;
-  if (strcmp(command, "LIST") == 0) {
-    msg = calloc(1, strlen(command)+2);
-    sprintf(msg, "%s\n", command);
+  if (method == LIST) {
+    msg = calloc(1, strlen(args[2])+2);
+    sprintf(msg, "%s\n", args[2]);
   } else {
-    msg = calloc(1, strlen(command)+strlen(args[3])+3);
-    sprintf(msg, "%s %s\n", command, args[3]);
+    msg = calloc(1, strlen(args[2])+strlen(args[3])+3);
+    sprintf(msg, "%s %s\n", args[2], args[3]);
   }
-  ssize_t len = strlen(msg) + 1;
-  LOG("msg: %s\n", msg);
-  write_to_socket(serverSocket, msg, len);
+  ssize_t len = strlen(msg);
+  write_to_socket(socket, msg, len);
   free(msg);
-  if (strcmp(command, "PUT") == 0) {
-    // read file and get size
+
+  if (method == PUT) {
     struct stat buf;
     if(stat(args[4], &buf) == -1)
       exit(1);
-    unsigned long long size = buf.st_size;
-    LOG("size of file 1: %llu\n", size);
-    write_to_socket(serverSocket, (char*)&size, MESSAGE_SIZE_DIGITS);
+    size_t size = buf.st_size;
+    write_to_socket(socket, (char*)&size, sizeof(size_t));
     FILE *local = fopen(args[4], "r");
     if (!local) {
-      fprintf(stderr, "local file open fail\n");
+      fprintf(stdout, "local file open fail\n");
       exit(1);
     }
-    size_t size_hd = size > 1024 ? 1024 : size;
-    char *buffer = calloc(1, size_hd+1);
-    fread(buffer, 1, size_hd, local);
-    write_to_socket(serverSocket, buffer, size_hd);
+    size_t bytes_write = 0;
+    while (bytes_write < size) {
+      size_t size_hd = (size-bytes_write) > 1024 ? 1024 : (size-bytes_write);
+      char buffer[size_hd+1];
+      fread(buffer, 1, size_hd, local);
+      write_to_socket(socket, buffer, size_hd);
+      bytes_write += size_hd;
+    }
     fclose(local);
   }
 }
