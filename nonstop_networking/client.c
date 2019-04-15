@@ -38,18 +38,6 @@ int main(int argc, char **argv) {
     close(serverSocket);
     free(args);
 }
-void print_any_err(size_t bytes_rd, size_t size) {
-  if (bytes_rd == 0) {
-    print_connection_closed();
-    exit(1);
-  } else if (bytes_rd < size) {
-    print_too_little_data();
-    exit(1);
-  } else if (bytes_rd > size) {
-    print_received_too_much_data();
-    exit(1);
-  }
-}
 void read_response(char **args, int socket, verb method) {
   char *buffer = calloc(1,strlen("OK\n")+1);
   size_t bytes_rd = read_from_socket(socket, buffer, strlen("OK\n"));
@@ -58,29 +46,34 @@ void read_response(char **args, int socket, verb method) {
     if (method == DELETE || method == PUT) {
       print_success();
     } else if (method == GET) {
+      FILE *local = fopen(args[4], "a+");
+      if (!local) {
+        perror(NULL);
+        exit(1);
+      }
+      size_t size;
+      read_from_socket(socket, (char *)&size, sizeof(size_t));
+      fprintf(stdout, "%zu", size);
+      size_t bytes_read = 0;
+      while (bytes_read < size+5) {
+        size_t size_hd = (size+5-bytes_read) > 1024 ? 1024 : (size+5-bytes_read);
+        char buffer_f[1024+1] = {0};
+        size_t rc = read_from_socket(socket, buffer_f, size_hd);
+        fwrite(buffer_f, 1, rc, local);
+        fprintf(stdout, "%s", buffer_f);
+        bytes_read += rc;
+        if (rc == 0)
+          break;
+      }
+      print_any_err(bytes_read, size);
+      fclose(local);
+    } else if (method == LIST) {
       size_t size;
       read_from_socket(socket, (char *)&size, sizeof(size_t));
       char *buffer_f = calloc(1, size+5+1);
       bytes_rd = read_from_socket(socket, buffer_f, size+5);
       print_any_err(bytes_rd, size);
       fprintf(stdout, "%zu%s", size, buffer_f);
-      umask(S_IRWXU | S_IRWXG);
-      FILE *local = fopen(args[4], "a+");
-      if (!local) {
-        perror(NULL);
-        exit(1);
-      }
-      fwrite(buffer_f, 1, size, local);
-      fclose(local);
-      free(buffer_f);
-    } else if (method == LIST) {
-      size_t size;
-      bytes_rd = read_from_socket(socket, (char *)&size, sizeof(size_t));
-      char *buffer_f = calloc(1, size+5+1);
-      bytes_rd = read_from_socket(socket, buffer_f, size+5);
-      print_any_err(bytes_rd, size);
-      fprintf(stdout, "%zu%s", size, buffer_f);
-      free(buffer_f);
     }
   } else {
     buffer = realloc(buffer, strlen("ERROR\n")+1);

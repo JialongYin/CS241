@@ -3,7 +3,18 @@
  * CS 241 - Spring 2019
  */
 #include "common.h"
-
+void print_any_err(size_t bytes_rd, size_t size) {
+  if (bytes_rd == 0 && bytes_rd != size) {
+    print_connection_closed();
+    exit(1);
+  } else if (bytes_rd < size) {
+    print_too_little_data();
+    exit(1);
+  } else if (bytes_rd > size) {
+    print_received_too_much_data();
+    exit(1);
+  }
+}
 ssize_t read_from_socket(int socket, char *buffer, size_t count) {
     // Your Code Here
     size_t bytes_recd = 0;
