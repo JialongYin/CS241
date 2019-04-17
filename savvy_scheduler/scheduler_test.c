@@ -121,7 +121,6 @@ static int test_comparer_sjf(void) {
     scheduler_start_up(SJF);
 
     // jobs running time order: j1 < j2 == j3
-
     // schedule job1
     job *j1 = make_and_schedule_new_job(1, 1, 1);
 
@@ -179,7 +178,6 @@ static int test_comparer_pri(void) {
 
 static int test_comparer_ppri(void) {
     scheduler_start_up(PPRI);
-
     // schedule job1
     job *j1 = make_and_schedule_new_job(10, 2, 0);
 
@@ -210,7 +208,7 @@ static int test_comparer_ppri(void) {
 
 static int test_comparer_psrtf(void) {
     scheduler_start_up(PSRTF);
-
+    // double runtime, double priority, double arrival
     // jobs remaining time (at time 1) order: j1 == j3 > j2 == j4
 
     // schedule job1
