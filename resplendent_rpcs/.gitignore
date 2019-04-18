@@ -1,0 +1,3 @@
+*
+!dns_query_svc_impl.c
+!dns_query_clnt_impl.c
