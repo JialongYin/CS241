@@ -1,0 +1,5 @@
+www.google.com;129.122.2.4
+www.wikipedia.org;91.198.174.192
+www.reddit.com;72.247.244.88
+www.github.com;207.97.227.239
+www.illinois.edu;192.17.172.3
