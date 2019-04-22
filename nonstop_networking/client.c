@@ -65,14 +65,14 @@ void read_response(char **args, int socket, verb method) {
         if (rc == 0)
           break;
       }
-      print_any_err(bytes_read, size);
+      if (print_any_err(bytes_read, size)) exit(1);
       fclose(local);
     } else if (method == LIST) {
       size_t size;
       read_from_socket(socket, (char *)&size, sizeof(size_t));
       char *buffer_f = calloc(1, size+5+1);
       bytes_rd = read_from_socket(socket, buffer_f, size+5);
-      print_any_err(bytes_rd, size);
+      if (print_any_err(bytes_rd, size)) exit(1);
       fprintf(stdout, "%zu%s", size, buffer_f);
     }
   } else {
