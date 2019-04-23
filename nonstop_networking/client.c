@@ -70,7 +70,8 @@ void read_response(char **args, int socket, verb method) {
     } else if (method == LIST) {
       size_t size;
       read_from_socket(socket, (char *)&size, sizeof(size_t));
-      char *buffer_f = calloc(1, size+5+1);
+      char buffer_f[size+5+1];
+      memset(buffer_f, 0, size+5+1);
       bytes_rd = read_from_socket(socket, buffer_f, size+5);
       if (print_any_err(bytes_rd, size)) exit(1);
       fprintf(stdout, "%zu%s", size, buffer_f);
@@ -101,7 +102,10 @@ void write_cmd(char **args, int socket, verb method) {
     sprintf(msg, "%s %s\n", args[2], args[3]);
   }
   ssize_t len = strlen(msg);
-  write_to_socket(socket, msg, len);
+  if (write_to_socket(socket, msg, len) < len) {
+    print_connection_closed();
+    exit(1);
+  }
   free(msg);
 
   if (method == PUT) {
@@ -109,6 +113,7 @@ void write_cmd(char **args, int socket, verb method) {
     if(stat(args[4], &buf) == -1)
       exit(1);
     size_t size = buf.st_size;
+    // LOG("client write_cmd size: %zu", size);
     write_to_socket(socket, (char*)&size, sizeof(size_t));
     FILE *local = fopen(args[4], "r");
     if (!local) {
@@ -117,10 +122,13 @@ void write_cmd(char **args, int socket, verb method) {
     }
     size_t bytes_write = 0;
     while (bytes_write < size) {
-      size_t size_hd = (size-bytes_write) > 1024 ? 1024 : (size-bytes_write);
+      ssize_t size_hd = (size-bytes_write) > 1024 ? 1024 : (size-bytes_write);
       char buffer[size_hd+1];
       fread(buffer, 1, size_hd, local);
-      write_to_socket(socket, buffer, size_hd);
+      if (write_to_socket(socket, buffer, size_hd) < size_hd) {
+        print_connection_closed();
+        exit(1);
+      }
       bytes_write += size_hd;
     }
     fclose(local);

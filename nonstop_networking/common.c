@@ -59,9 +59,5 @@ ssize_t write_to_socket(int socket, const char *buffer, size_t count) {
       }
       bytes_write += ret;
     }
-    if (bytes_write < count) {
-      print_connection_closed();
-      exit(1);
-    }
     return bytes_write;
 }
