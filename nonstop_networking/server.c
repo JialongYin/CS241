@@ -97,11 +97,15 @@ void run_server(char *port) {
 	}
 	freeaddrinfo(result);
 	epollfd = epoll_create(42);
+	if (epollfd == -1) {
+        perror("epoll_create1()");
+        exit(1);
+  }
 	struct epoll_event ev = {.events = EPOLLIN, .data.fd = serverSocket};
 	epoll_ctl(epollfd, EPOLL_CTL_ADD, serverSocket, &ev);
 	struct epoll_event array[MAX_EVENTS];
 	while (1) {
-		int num_events = epoll_wait(epollfd, array, MAX_EVENTS, 1000);
+		int num_events = epoll_wait(epollfd, array, MAX_EVENTS, 10000);
 		if (num_events == -1) {
 			// handle close server, clean up
 			exit(1);
@@ -195,7 +199,7 @@ void process_cmd(int client_fd, client_info *info) {
 			info->state = -3;
 			return;
 		}
-		int idx = 0;
+		size_t idx = 0;
 		VECTOR_FOR_EACH(file_list, name, {
 	        if (!strcmp((char *) name, info->filename)){
 	           break;
@@ -240,7 +244,7 @@ int read_body(int client_fd, client_info *info) {
 	}
 	size_t size;
 	read_from_socket(client_fd, (char *)&size, sizeof(size_t));
-	// LOG("read_body size: %zu", size);
+	LOG("read_body size: %zu", size);
 	fwrite(&size, 1, sizeof(size_t), remote);
 	size_t bytes_read = 0;
 	while (bytes_read < size+5) {
@@ -277,8 +281,7 @@ size_t read_from_socket_newline(int socket, char *buffer, size_t count){
 			continue;
 		}
 		if (ret == -1) {
-			print_invalid_response();
-			exit(1);
+			perror("read_from_socket_newline()");
 		}
 		bytes_recd += ret;
 	}

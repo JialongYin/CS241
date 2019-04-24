@@ -31,8 +31,8 @@ ssize_t read_from_socket(int socket, char *buffer, size_t count) {
       }
       // return -1 on failure
       if (ret == -1) {
-        print_invalid_response();
-        exit(1);
+        perror("read_from_socket()");
+        return -1;
       }
       bytes_recd += ret;
     }

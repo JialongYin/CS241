@@ -21,6 +21,7 @@ void resolve_hostname(char *server_host, char *host_to_resolve) {
     q->host = calloc(1, strlen(host_to_resolve)+1);
     strcpy(q->host, host_to_resolve);
     response *resp = send_query(q, server_host);
+    // printf("client resp: %d\n", resp->success);
     if (!resp->success) {
       print_failure();
       exit(1);

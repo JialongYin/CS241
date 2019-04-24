@@ -113,7 +113,7 @@ void write_cmd(char **args, int socket, verb method) {
     if(stat(args[4], &buf) == -1)
       exit(1);
     size_t size = buf.st_size;
-    // LOG("client write_cmd size: %zu", size);
+    LOG("client write_cmd size: %zu", size);
     write_to_socket(socket, (char*)&size, sizeof(size_t));
     FILE *local = fopen(args[4], "r");
     if (!local) {
@@ -131,6 +131,7 @@ void write_cmd(char **args, int socket, verb method) {
       }
       bytes_write += size_hd;
     }
+    LOG("client write_cmd bytes_write: %zu", bytes_write);
     fclose(local);
   }
 }
