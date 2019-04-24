@@ -11,6 +11,23 @@
 void resolve_hostname(char *server_host, char *host_to_resolve) {
     // Your Code Here
     // Look in the header for more details
+    fflush(stdout);
+    char *ip_addr = check_cache_for_address(host_to_resolve, CACHE_FILE);
+    if (ip_addr) {
+      print_ipv4_address_in_cache(host_to_resolve, ip_addr);
+      exit(0);
+    }
+    query *q = calloc(1, sizeof(query));
+    q->host = calloc(1, strlen(host_to_resolve)+1);
+    strcpy(q->host, host_to_resolve);
+    response *resp = send_query(q, server_host);
+    if (!resp->success) {
+      print_failure();
+      exit(1);
+    } else {
+      print_ipv4_address(host_to_resolve, resp->address->host_ipv4_address);
+      exit(1);
+    }
 }
 
 CLIENT *create_client_stub(char *host) {

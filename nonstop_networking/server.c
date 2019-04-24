@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <netdb.h>
 #include <signal.h>
@@ -113,6 +114,8 @@ void run_server(char *port) {
 						perror("accept");
 						exit(1);
 				}
+				int flags = fcntl(client_fd, F_GETFL, 0);
+        fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
 				struct epoll_event ev_c = {.events = EPOLLIN, .data.fd = client_fd};
 				epoll_ctl(epollfd, EPOLL_CTL_ADD, client_fd, &ev_c);
 				client_info *info = calloc(1, sizeof(client_info));
@@ -178,6 +181,7 @@ void process_cmd(int client_fd, client_info *info) {
       write_to_socket(client_fd, buffer, size_hd);
       bytes_write += size_hd;
     }
+		fclose(remote);
 	} else if (info->cmd == PUT) {
 		// LOG("process PUT");
 		write_to_socket(client_fd, "OK\n", 3);
@@ -191,7 +195,18 @@ void process_cmd(int client_fd, client_info *info) {
 			info->state = -3;
 			return;
 		}
-		vector_erase(file_list, info->idx_f);
+		int idx = 0;
+		VECTOR_FOR_EACH(file_list, name, {
+	        if (!strcmp((char *) name, info->filename)){
+	           break;
+	        }
+					idx++;
+	      });
+		if (idx == vector_size(file_list)) {
+			info->state = -3;
+			return;
+		}
+		vector_erase(file_list, idx);
 		write_to_socket(client_fd, "OK\n", 3);
 	} else if (info->cmd == LIST) {
 		// LOG("process LIST");
@@ -244,7 +259,6 @@ int read_body(int client_fd, client_info *info) {
 		return 1;
 	}
 	vector_push_back(file_list, info->filename);
-	info->idx_f = vector_size(file_list)-1;
 	// LOG("read_body end");
 	return 0;
 }
