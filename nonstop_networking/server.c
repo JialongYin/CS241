@@ -118,8 +118,8 @@ void run_server(char *port) {
 						perror("accept");
 						exit(1);
 				}
-				int flags = fcntl(client_fd, F_GETFL, 0);
-        fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
+				// int flags = fcntl(client_fd, F_GETFL, 0);
+        // fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
 				struct epoll_event ev_c = {.events = EPOLLIN, .data.fd = client_fd};
 				epoll_ctl(epollfd, EPOLL_CTL_ADD, client_fd, &ev_c);
 				client_info *info = calloc(1, sizeof(client_info));
@@ -237,6 +237,7 @@ int read_body(int client_fd, client_info *info) {
 	char path[len];
 	memset(path,0, len);
 	sprintf(path, "%s/%s", dir_name, info->filename);
+	FILE *overwrite_f = fopen(path, "r");
 	FILE *remote = fopen(path, "w");
 	if (!remote) {
 		perror("fopen");
@@ -244,25 +245,34 @@ int read_body(int client_fd, client_info *info) {
 	}
 	size_t size;
 	read_from_socket(client_fd, (char *)&size, sizeof(size_t));
-	LOG("read_body size: %zu", size);
+	// LOG("read_body size:%zu", size);
 	fwrite(&size, 1, sizeof(size_t), remote);
 	size_t bytes_read = 0;
 	while (bytes_read < size+5) {
 		size_t size_hd = (size+5-bytes_read) > 1024 ? 1024 : (size+5-bytes_read);
 		char buffer_f[1024+1] = {0};
-		size_t rc = read_from_socket(client_fd, buffer_f, size_hd);
+		ssize_t rc = read_from_socket(client_fd, buffer_f, size_hd);
+		if (rc == -1) continue;
 		fwrite(buffer_f, 1, rc, remote);
 		bytes_read += rc;
-		if (rc == 0)
+		// LOG("read_body bytes_read:%zu", bytes_read);
+		if (rc == 0) {
+			// LOG("pass here");
 			break;
+		}
 	}
+	// LOG("read_body path bytes_read: %s,%zu", path, bytes_read);
 	fclose(remote);
 	if (print_any_err(bytes_read, size)) {
 		remove(path);
 		// LOG("read_body print_any_err bytes_read:size %zu, %zu", bytes_read, size);
 		return 1;
 	}
-	vector_push_back(file_list, info->filename);
+	if (!overwrite_f) {
+		vector_push_back(file_list, info->filename);
+	} else {
+		fclose(overwrite_f);
+	}
 	// LOG("read_body end");
 	return 0;
 }
@@ -301,11 +311,10 @@ void read_header(int client_fd, client_info *info) {
 		strcpy(info->filename, info->header+4);
 		info->filename[strlen(info->filename)-1] = '\0';
 	} else if (!strncmp(info->header, "PUT", 3)) {
-		// LOG("read_header PUT");
 		info->cmd = PUT;
 		strcpy(info->filename, info->header+4);
-		// LOG("read_header PUT filename size: %zu", strlen(info->filename));
 		info->filename[strlen(info->filename)-1] = '\0';
+		// LOG("read_header PUT cmd: %s, %zu, %s, %zu", info->header, strlen(info->header), info->filename, strlen(info->filename));
 		if (read_body(client_fd, info)) {
 			// LOG("read_body fail");
 			info->state = -2;
