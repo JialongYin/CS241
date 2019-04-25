@@ -46,6 +46,7 @@ static int epollfd;
 static dictionary  *clients_dict;
 static char *dir_name;
 static vector *file_list;
+static dictionary  *file_size;
 
 int main(int argc, char **argv) {
 	// good luck!
@@ -66,6 +67,7 @@ int main(int argc, char **argv) {
   dir_name = mkdtemp(template);
   print_temp_directory(dir_name);
 	file_list = string_vector_create();
+	file_size = string_to_unsigned_long_dictionary_create();
 	run_server(argv[1]);
 }
 void handle_sigpipe() {
@@ -175,7 +177,8 @@ void process_cmd(int client_fd, client_info *info) {
 		}
 		write_to_socket(client_fd, "OK\n", 3);
 		size_t size;
-		fread(&size, 1, sizeof(size_t), remote);
+		// fread(&size, 1, sizeof(size_t), remote);
+		size = *(size_t *) dictionary_get(file_size, info->filename);
 		write_to_socket(client_fd, (char*)&size, sizeof(size_t));
 		size_t bytes_write = 0;
     while (bytes_write < size) {
@@ -211,6 +214,7 @@ void process_cmd(int client_fd, client_info *info) {
 			return;
 		}
 		vector_erase(file_list, idx);
+		dictionary_remove(file_size, info->filename);
 		write_to_socket(client_fd, "OK\n", 3);
 	} else if (info->cmd == LIST) {
 		// LOG("process LIST");
@@ -246,7 +250,7 @@ int read_body(int client_fd, client_info *info) {
 	size_t size;
 	read_from_socket(client_fd, (char *)&size, sizeof(size_t));
 	// LOG("read_body size:%zu", size);
-	fwrite(&size, 1, sizeof(size_t), remote);
+	// fwrite(&size, 1, sizeof(size_t), remote);
 	size_t bytes_read = 0;
 	while (bytes_read < size+5) {
 		size_t size_hd = (size+5-bytes_read) > 1024 ? 1024 : (size+5-bytes_read);
@@ -273,6 +277,7 @@ int read_body(int client_fd, client_info *info) {
 	} else {
 		fclose(overwrite_f);
 	}
+	dictionary_set(file_size, info->filename, &size);
 	// LOG("read_body end");
 	return 0;
 }
@@ -350,5 +355,6 @@ void close_server() {
 	dictionary_destroy(clients_dict);
 	remove(dir_name);
 	vector_destroy(file_list);
+	dictionary_destroy(file_size);
 	exit(1);
 }
