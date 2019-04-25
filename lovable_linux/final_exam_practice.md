@@ -1,20 +1,22 @@
 # Angrave's 2019 Acme-CS241-Exam Prep		
-## AKA Preparing for the Final Exam & Beyond CS 241... 
+## AKA Preparing for the Final Exam & Beyond CS 241...
 
-Some of the questions require research (wikibook; websearch; wikipedia). 
-It is ok to work together & discuss answers! 
+Some of the questions require research (wikibook; websearch; wikipedia).
+It is ok to work together & discuss answers!
 Be ready to discuss and clear confusions & misconceptions in your last discussion section.
-The final will also include pthreads, fork-exec-wait questions and virtual memory address translation. 
+The final will also include pthreads, fork-exec-wait questions and virtual memory address translation.
 Be awesome. Angrave.
 
-## 1. C 
+## 1. C
 
 
 1.	What are the differences between a library call and a system call? Include an example of each.
-
+  System calls (functions provided by the kernel) such as write()
+  Library calls (functions within program libraries) such as printf()
 
 2.	What is the `*` operator in C? What is the `&` operator? Give an example of each.
-
+  `*` operator is dereference
+  `&` operator is address (of operand)
 
 3.	When is `strlen(s)` != `1+strlen(s+1)` ?
 
@@ -30,19 +32,19 @@ else if (s is NULL)
     trunc(s, max) == NULL
 else
     strlen(trunc(s, max)) <= max
-    // i.e. char s[]="abcdefgh; trunc(s,3); s == "abc". 
+    // i.e. char s[]="abcdefgh; trunc(s,3); s == "abc".
 ```
 
 
 6.	Complete the following function to create a deep-copy on the heap of the argv array. Set the result pointer to point to your array. The only library calls you may use are malloc and memcpy. You may not use strdup.
 
-    `void duplicate(char **argv, char ***result);` 
+    `void duplicate(char **argv, char ***result);`
 
 7.	Write a program that reads a series of lines from `stdin` and prints them to `stdout` using `fgets` or `getline`. Your program should stop if a read error or end of file occurs. The last text line may not have a newline char.
 
-## 2. Memory 
+## 2. Memory
 
-1.	Explain how a virtual address is converted into a physical address using a multi-level page table. You may use a concrete example e.g. a 64bit machine with 4KB pages. 
+1.	Explain how a virtual address is converted into a physical address using a multi-level page table. You may use a concrete example e.g. a 64bit machine with 4KB pages.
 
 2.	Explain Knuth's and the Buddy allocation scheme. Discuss internal & external Fragmentation.
 
@@ -54,7 +56,7 @@ else
 
 6.	What is Spatial and Temporal Locality? Swapping? Swap file? Demand Paging?
 
-## 3. Processes and Threads 
+## 3. Processes and Threads
 
 1.	What resources are shared between threads in the same process?
 
@@ -68,7 +70,7 @@ else
 
 6.	Under what conditions will a multi-threaded process exit? (List at least 4)
 
-## 4. Scheduling 
+## 4. Scheduling
 1.	Define arrival time, pre-emption, turnaround time, waiting time and response time in the context of scheduling algorithms. What is starvation?  Which scheduling policies have the possibility of resulting in starvation?
 
 2.	Which scheduling algorithm results the smallest average wait time?
@@ -77,9 +79,9 @@ else
 
 4.	Describe Round-Robin scheduling and its performance advantages and disadvantages.
 
-5.	Describe the First Come First Serve (FCFS) scheduling algorithm. Explain how it leads to the convoy effect. 
+5.	Describe the First Come First Serve (FCFS) scheduling algorithm. Explain how it leads to the convoy effect.
 
-6.	Describe the Pre-emptive and Non-preemptive SJF scheduling algorithms. 
+6.	Describe the Pre-emptive and Non-preemptive SJF scheduling algorithms.
 
 7.	How does the length of the time quantum affect Round-Robin scheduling? What is the problem if the quantum is too small? In the limit of large time slices Round Robin is identical to _____?
 
@@ -117,7 +119,7 @@ else
 
 7.	Why is it unsafe to call printf, and malloc inside a signal handler?
 
-## 7. Networking 
+## 7. Networking
 
 1.	Explain the purpose of `socket`, `bind`, `listen`, and `accept` functions
 
@@ -127,7 +129,7 @@ else
 
 4.	Explain the main differences between using `select` and `epoll`. What are edge- and level-triggered epoll modes?
 
-5.	Describe the services provided by TCP but not UDP. 
+5.	Describe the services provided by TCP but not UDP.
 
 6.	How does TCP connection establishment work? And how does it affect latency in HTTP1.0 vs HTTP1.1?
 
@@ -135,9 +137,9 @@ else
 
 8.	How is Domain Name System (DNS) related to IP and UDP? When does host resolution not cause traffic?
 
-9.	What is NAT and where and why is it used? 
+9.	What is NAT and where and why is it used?
 
-## 8. Files 
+## 8. Files
 
 1.	Write code that uses `fseek`, `ftell`, `read` and `write` to copy the second half of the contents of a file to a `pipe`.
 
@@ -145,7 +147,7 @@ else
 
 3.	Write brief code to create a symbolic link and hard link to the file /etc/password
 
-4.	"Creating a symlink in my home directory to the file /secret.txt succeeds but creating a hard link fails" Why? 
+4.	"Creating a symlink in my home directory to the file /secret.txt succeeds but creating a hard link fails" Why?
 
 5.	Briefly explain permission bits (including sticky and setuid bits) for files and directories.
 
@@ -155,14 +157,14 @@ else
 
 8.	The file 'installmeplz' can't be run (it's owned by root and is not executable). Explain how to use sudo, chown and chmod shell commands, to change the ownership to you and ensure that it is executable.
 
-## 9. File system 
+## 9. File system
 Assume 10 direct blocks, a pointer to an indirect block, double-indirect, and triple indirect block, and block size 4KB.
 
 1.	A file uses 10 direct blocks, a completely full indirect block and one double-indirect block. The latter has just one entry to a half-full indirect block. How many disk blocks does the file use, including its content, and all indirect, double-indirect blocks, but not the inode itself? A sketch would be useful.
 
 2.	How many i-node reads are required to fetch the file access time at /var/log/dmesg ? Assume the inode of (/) is cached in memory. Would your answer change if the file was created as a symbolic link? Hard link?
 
-3.	What information is stored in an i-node?  What file system information is not? 
+3.	What information is stored in an i-node?  What file system information is not?
 
 4.	Using a version of stat, write code to determine a file's size and return -1 if the file does not exist, return -2 if the file is a directory or -3 if it is a symbolic link.
 
