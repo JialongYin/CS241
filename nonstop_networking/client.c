@@ -53,14 +53,14 @@ void read_response(char **args, int socket, verb method) {
       }
       size_t size;
       read_from_socket(socket, (char *)&size, sizeof(size_t));
-      fprintf(stdout, "%zu", size);
+      // fprintf(stdout, "%zu", size);
       size_t bytes_read = 0;
       while (bytes_read < size+5) {
         size_t size_hd = (size+5-bytes_read) > 1024 ? 1024 : (size+5-bytes_read);
         char buffer_f[1024+1] = {0};
         size_t rc = read_from_socket(socket, buffer_f, size_hd);
         fwrite(buffer_f, 1, rc, local);
-        fprintf(stdout, "%s", buffer_f);
+        // fprintf(stdout, "%s", buffer_f);
         bytes_read += rc;
         if (rc == 0)
           break;

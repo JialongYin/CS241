@@ -11,18 +11,18 @@ Be awesome. Angrave.
 
 
 1.	What are the differences between a library call and a system call? Include an example of each.
-  System calls (functions provided by the kernel) such as write()
-  Library calls (functions within program libraries) such as printf()
+System calls (functions provided by the kernel) such as write()
+Library calls (functions within program libraries) such as printf()
 
 2.	What is the `*` operator in C? What is the `&` operator? Give an example of each.
-  `*` operator is dereference
-  `&` operator is address (of operand)
+`*` operator is dereference
+`&` operator is address (of operand)
 
 3.	When is `strlen(s)` != `1+strlen(s+1)` ?
-
+ when s is NULL byte
 
 4.	How are C strings represented in memory? What is the wrong with `malloc(strlen(s))` when copying strings?
-
+C strings are represented as array of char. We need extra byte for '\0'
 
 5.	Implement a truncation function `void trunc(char*s,size_t max)` to ensure strings are not too long with the following edge cases.
 ```
@@ -34,41 +34,65 @@ else
     strlen(trunc(s, max)) <= max
     // i.e. char s[]="abcdefgh; trunc(s,3); s == "abc".
 ```
-
+void trunc(char*s,size_t max) {
+  if (strlen(s) < max) return s;
+  else if (s == NULL) return NULL;
+  else s[max-1] = '\0'; return s;
+}
 
 6.	Complete the following function to create a deep-copy on the heap of the argv array. Set the result pointer to point to your array. The only library calls you may use are malloc and memcpy. You may not use strdup.
 
     `void duplicate(char **argv, char ***result);`
-
+{
+  int size = 0;
+  for (int i = 0; argv[i] != NULL; i++) size++;
+  char **copy = malloc(size*sizeof(char*));
+  for (int i = 0; argv[i] != NULL; i++) {
+    char *ele = malloc(sizeof(char));
+    memcpy(ele, argv[i]);
+    copy[i] = ele;
+  }
+}
 7.	Write a program that reads a series of lines from `stdin` and prints them to `stdout` using `fgets` or `getline`. Your program should stop if a read error or end of file occurs. The last text line may not have a newline char.
-
+while(1) {
+  char buffer[1024];
+  ssize_t read = getline(&buffer, 1024, stdin);
+  if (read <= 0) break;
+  fprintf(stdout, buffer);
+}
 ## 2. Memory
 
 1.	Explain how a virtual address is converted into a physical address using a multi-level page table. You may use a concrete example e.g. a 64bit machine with 4KB pages.
-
+ First, you take the top level page table and find the Index1’th entry. That will contain a number that will lead you to the appropriate sub-table Then go to the Index2’th entry of that table. That will contain a frame number.
 2.	Explain Knuth's and the Buddy allocation scheme. Discuss internal & external Fragmentation.
-
+Knuth: As the blocks are contiguous, the end of one blocks sits right next to the start of the next block. So the current block (apart from the first one) can look a few bytes further back to lookup the size of the previous block. With this information you can now jump backwards
+Buddy: A segregated allocator is one that divides the heap into different areas that are handled by different sub-allocators dependent on the size of the allocation request. Sizes are grouped into powers of two and each size is handled by a different sub-allocator and each size maintains its own free list.
 3.	What is the difference between the MMU and TLB? What is the purpose of each?
-
+The Memory Management Unit (MMU) performs the address translation. If the translation succeeds, the page get pulled from RAM – conceptually the entire page isn’t loaded up. The result is cached in the TLB.
 4.	Assuming 4KB page tables what is the page number and offset for virtual address 0x12345678  ?
-
+1234, 5678
 5.	What is a page fault? When is it an error? When is it not an error?
-
+A page fault is a type of exception raised by computer hardware when a running program accesses a memory page that is not currently mapped by the memory management unit (MMU) into the virtual address space of a process.
 6.	What is Spatial and Temporal Locality? Swapping? Swap file? Demand Paging?
-
+Temporal locality refers to recently accessed items will be accessed in the near future (e.g., code in loops, top of stack) Spatial locality refers to the items at addresses close to the addresses of recently accessed items will be accessed in the near future (sequential code, elements of arrays)
+Swapper copies all pages related to a whole process
 ## 3. Processes and Threads
 
 1.	What resources are shared between threads in the same process?
-
+Resources like code, heap, data, and files can be shared among all threads within a process.
 2.	Explain the operating system actions required to perform a process context switch
-
+PCB
 3.	Explain the actions required to perform a thread context switch to a thread in the same process
-
+PCB
 4.	How can a process be orphaned? What does the process do about it?
-
+parent exit earlier than child process. Assign them to the init - the first process
 5.	How do you create a process zombie?
-
+If parent don’t wait on your children, Zombies occur when a child terminates and then take up a spot in the kernel process table for your process.
 6.	Under what conditions will a multi-threaded process exit? (List at least 4)
+Returning from the thread function
+Calling pthread_exit
+Cancelling the thread with pthread_cancel
+Terminating the process through a signal
 
 ## 4. Scheduling
 1.	Define arrival time, pre-emption, turnaround time, waiting time and response time in the context of scheduling algorithms. What is starvation?  Which scheduling policies have the possibility of resulting in starvation?
