@@ -15,8 +15,8 @@ System calls (functions provided by the kernel) such as write()
 Library calls (functions within program libraries) such as printf()
 
 2.	What is the `*` operator in C? What is the `&` operator? Give an example of each.
-`*` operator is dereference
-`&` operator is address (of operand)
+`*` operator is dereference such as int *ptr; *ptr= 1;
+`&` operator is address (of operand) such as int a = 1; int *ptr = &a;
 
 3.	When is `strlen(s)` != `1+strlen(s+1)` ?
  when s is NULL byte
@@ -52,6 +52,8 @@ void trunc(char*s,size_t max) {
     memcpy(ele, argv[i]);
     copy[i] = ele;
   }
+  copy[size] = NULL;
+  *result = copy;
 }
 7.	Write a program that reads a series of lines from `stdin` and prints them to `stdout` using `fgets` or `getline`. Your program should stop if a read error or end of file occurs. The last text line may not have a newline char.
 while(1) {
@@ -63,29 +65,31 @@ while(1) {
 ## 2. Memory
 
 1.	Explain how a virtual address is converted into a physical address using a multi-level page table. You may use a concrete example e.g. a 64bit machine with 4KB pages.
- First, you take the top level page table and find the Index1’th entry. That will contain a number that will lead you to the appropriate sub-table Then go to the Index2’th entry of that table. That will contain a frame number.
+ First, take the top level page table and find the Index1’th entry. That will contain a number that will lead to the appropriate sub-table Then go to the Index2’th entry of that table. That will contain a frame number.
 2.	Explain Knuth's and the Buddy allocation scheme. Discuss internal & external Fragmentation.
 Knuth: As the blocks are contiguous, the end of one blocks sits right next to the start of the next block. So the current block (apart from the first one) can look a few bytes further back to lookup the size of the previous block. With this information you can now jump backwards
 Buddy: A segregated allocator is one that divides the heap into different areas that are handled by different sub-allocators dependent on the size of the allocation request. Sizes are grouped into powers of two and each size is handled by a different sub-allocator and each size maintains its own free list.
+internal & external fragmentation:Internal fragmentation is the wasted space within each allocated block because of rounding up from the actual requested allocation to the allocation granularity. External fragmentation is the various free spaced holes that are generated in either your memory or disk space.
 3.	What is the difference between the MMU and TLB? What is the purpose of each?
 The Memory Management Unit (MMU) performs the address translation. If the translation succeeds, the page get pulled from RAM – conceptually the entire page isn’t loaded up. The result is cached in the TLB.
 4.	Assuming 4KB page tables what is the page number and offset for virtual address 0x12345678  ?
-1234, 5678
+page number: 0001 0010 0011 0100 0101 offset: 0110	0111 1000
 5.	What is a page fault? When is it an error? When is it not an error?
 A page fault is a type of exception raised by computer hardware when a running program accesses a memory page that is not currently mapped by the memory management unit (MMU) into the virtual address space of a process.
 6.	What is Spatial and Temporal Locality? Swapping? Swap file? Demand Paging?
 Temporal locality refers to recently accessed items will be accessed in the near future (e.g., code in loops, top of stack) Spatial locality refers to the items at addresses close to the addresses of recently accessed items will be accessed in the near future (sequential code, elements of arrays)
-Swapper copies all pages related to a whole process
+Swapper copies all pages related to a whole process.
+Demand paging is a method of virtual memory management. In a system that uses demand paging, the operating system copies a disk page into physical memory only if an attempt is made to access it and that page is not already in memory.
 ## 3. Processes and Threads
 
 1.	What resources are shared between threads in the same process?
 Resources like code, heap, data, and files can be shared among all threads within a process.
 2.	Explain the operating system actions required to perform a process context switch
-PCB
+Process context switching involves switching the memory address space. This includes memory addresses, mappings, page tables, and kernel resources—a relatively expensive operation. On some architectures, it even means flushing various processor caches that aren't sharable across address spaces. For example, x86 has to flush the TLB and some ARM processors have to flush the entirety of the L1 cache.
 3.	Explain the actions required to perform a thread context switch to a thread in the same process
-PCB
+Thread switching is context switching from one thread to another in the same process (switching from thread to thread across processes is just process switching).Switching processor state (such as the program counter and register contents) is generally very efficient.
 4.	How can a process be orphaned? What does the process do about it?
-parent exit earlier than child process. Assign them to the init - the first process
+Parent exit earlier than child process. Assign them to the init - the first process
 5.	How do you create a process zombie?
 If parent don’t wait on your children, Zombies occur when a child terminates and then take up a spot in the kernel process table for your process.
 6.	Under what conditions will a multi-threaded process exit? (List at least 4)
